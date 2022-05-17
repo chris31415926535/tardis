@@ -6,7 +6,7 @@
 \usage{
 tardis1(
  
-    input_text = "happy. very happy. VERY happy! ❤️ ❤️❤️  very not happy. not sad. not very sad. hello there lovely. not happy. not happy! i am happy! i am happy!!! i am not happy. i am not not happy. i am not sad.",
+    input_text = "I am happy. I am VERY happy!! ❤️ Not sad. Bad. Not bad. Not very bad.",
   text_column = NA,
   dict_sentiments = NA,
   dict_modifiers = NA,

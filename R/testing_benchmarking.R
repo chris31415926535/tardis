@@ -339,7 +339,10 @@
 ## TESTING DICTIONARY WITH MULTI-NGRAM SENTIMENTS
 
 
-dict_sentiments <- dplyr::tibble(word = c("good", "supreme court", "bad"), sentiment = c(2.7, 0, -2.7))
-tardis1("the supreme court is a bad institution", dict_sentiments = dict_sentiments)
-tardis1("the supreme court is a bad institution")
-bench::mark(tardis1(rep(stringr::sentences, times = 10)))
+# dict_sentiments <- dplyr::tibble(word = c("good", "supreme court", "bad"), sentiment = c(2.7, 0, -2.7))
+# tardis1("the supreme court is a bad institution", dict_sentiments = dict_sentiments)
+# tardis1("the supreme court is a bad institution")
+# bench::mark(tardis1(rep(stringr::sentences, times = 10)))
+
+
+#
