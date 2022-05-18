@@ -57,6 +57,7 @@ lag1_indexed_vector <- function(vector_index, vec_to_lag) {
 #' @param dict_sentiments Optional sentiment dictionary. A data.frame with two columns: `word` and `value`
 #' @param dict_modifiers Optional modifiers dictionary. A data.frame with two columns: `word` and `value`
 #' @param dict_negations Optional negation dictionary. A data.frame with one column: `word`
+#' @param use_rcpp Testing/debug boolean: use rcpp functions instead of dplyr?
 #'
 #' @return A data.frame with one row for each input text and three new columns:
 #'         `sentiment_mean`: the average sentiment for each sentence in each text.
@@ -68,7 +69,8 @@ tardis1 <- function(
   text_column = NA,
   dict_sentiments = NA,
   dict_modifiers = NA,
-  dict_negations = NA
+  dict_negations = NA,
+  use_rcpp = FALSE
 
 
 ) {
@@ -255,19 +257,23 @@ tardis1 <- function(
 
 
   # get sentence-level scores
-  result_sentences <- result %>%
-    dplyr::group_by(text_id, sentence_id) %>%
-    dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
-                     sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question * 0.18, 0.96)
-                     #,sentence_swing = max(sentiment_word) - min(sentiment_word)
-                     , .groups = "drop_last"
-    ) %>%
-    #dplyr::mutate(sentence_score = dplyr::if_else(sentence_sum > 0, sentence_sum + sentence_punct, sentence_sum - sentence_punct)) %>%
-    # vectorized add punctuation in the signed direction, only if not zero. (otherwise subtracted when it shouldn't)
-    dplyr::mutate(sentence_score = dplyr::if_else(abs(sentence_sum) > 0, sentence_sum + sentence_punct* (sentence_sum/abs(sentence_sum)), sentence_sum)) %>%
-    dplyr::mutate(sentence_score = sentence_score / sqrt((sentence_score * sentence_score) + 15)) %>%
-    dplyr::select(-sentence_sum, -sentence_punct)
+  if (!use_rcpp){
+    result_sentences <- result %>%
+      dplyr::group_by(text_id, sentence_id) %>%
+      dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
+                       sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question * 0.18, 0.96)
+                       #,sentence_swing = max(sentiment_word) - min(sentiment_word)
+                       , .groups = "drop_last"
+      ) %>%
+      # vectorized add punctuation in the signed direction, only if not zero. (otherwise subtracted when it shouldn't)
+      dplyr::mutate(sentence_score = dplyr::if_else(abs(sentence_sum) > 0, sentence_sum + sentence_punct* (sentence_sum/abs(sentence_sum)), sentence_sum)) %>%
+      dplyr::mutate(sentence_score = sentence_score / sqrt((sentence_score * sentence_score) + 15)) %>%
+      dplyr::select(-sentence_sum, -sentence_punct)
+  } else {
 
+    result_sentences <- manual_summary_rcppdf2(result)
+
+  }
   # result_sentences <- dplyr::tibble(sentence_score = manual_summary_rcpp(sentence_id = result$sentence_id,
   #                                                                        sentiment_word = result$sentiment_word,
   #                                                                        punct_exclamation = result$punct_exclamation,
@@ -285,11 +291,12 @@ tardis1 <- function(
   #                              sentiment_mean = mean(result_sentences$sentence_score),
   #                              sentiment_sd = sd(result_sentences$sentence_score),
   #                              sentiment_range = max(result_sentences$sentence_score) - min(result_sentences$sentence_score))
-  result_text <- dplyr::summarise(result_sentences,
-                                  #text = input_text,
-                                  sentiment_mean = mean(sentence_score),
-                                  sentiment_sd = stats::sd(sentence_score),
-                                  sentiment_range = max(sentence_score) - min(sentence_score))
+  result_text <- result_sentences %>%
+    dplyr::group_by(text_id) %>%
+    dplyr::summarise(
+      sentiment_mean = mean(sentence_score),
+      sentiment_sd = stats::sd(sentence_score),
+      sentiment_range = max(sentence_score) - min(sentence_score))
 
   # add back original text, remove text_id column
   result_text[text_column] <- original_input
