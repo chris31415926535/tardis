@@ -3,7 +3,7 @@
 
 # VADER dict
 dict_vader <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
-  readr::write_csv("data_raw/dict_vader.csv")
+  readr::write_csv("data-raw/dict_vader.csv")
 
 usethis::use_data(dict_vader, overwrite = TRUE)
 
@@ -12,7 +12,7 @@ usethis::use_data(dict_vader, overwrite = TRUE)
 #Minqing Hu and Bing Liu, “Mining and summarizing customer reviews.”, Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.
 dict_liu <- tidytext::sentiments %>%
   dplyr::mutate(sentiment = dplyr::if_else(sentiment == "positive", 1, -1)) %>%
-  readr::write_csv("data_raw/dict_liu.csv")
+  readr::write_csv("data-raw/dict_liu.csv")
 
 usethis::use_data(dict_liu, overwrite = TRUE)
 
@@ -30,15 +30,20 @@ usethis::use_data(dict_liu, overwrite = TRUE)
 # Kralj Novak P, Smailović J, Sluban B, Mozetič I (2015) Sentiment of Emojis. PLoS ONE 10(12): e0144296. https://doi.org/10.1371/journal.pone.0144296
 # https://www.clarin.si/repository/xmlui/bitstream/handle/11356/1048/Emoji_Sentiment_Data_v1.0.csv?sequence=8&isAllowed=y
 dict_emoji_raw <- readr::read_csv("https://www.clarin.si/repository/xmlui/bitstream/handle/11356/1048/Emoji_Sentiment_Data_v1.0.csv?sequence=8&isAllowed=y") %>%
-  readr::write_csv("data_raw/dict_emoji_raw.csv")
+  readr::write_csv("data-raw/dict_emoji_raw.csv")
 
 dict_emoji <- dict_emoji_raw %>%
   dplyr::mutate(total = Positive + Negative + Neutral,
                 sentiment = (Positive - Negative) / total) %>%
   dplyr::select(word = Emoji, sentiment) %>%
-  readr::write_csv("data_raw/dict_emoji.csv")
+  readr::write_csv("data-raw/dict_emoji.csv")
 
+usethis::use_data(dict_emoji, overwrite = TRUE)
 
+# and an emoji regex from the package emo
+emoji_regex_internal <- emo::ji_rx
+
+usethis::use_data(emoji_regex_internal, internal = TRUE, overwrite = TRUE)
 
 # create TARDIS dictionary combining Vader and emoji dicts
 # we comptute emoji sentiment sa per Novak et al 2015, then we
@@ -57,7 +62,7 @@ dict_emoji_temp <- dict_emoji_raw %>%
 
 dict_tardis_sentiment <- dplyr::bind_rows(dict_vader, dict_emoji_temp)
 
-readr::write_csv(dict_tardis_sentiment, "data_raw/dict_tardis.csv")
+readr::write_csv(dict_tardis_sentiment, "data-raw/dict_tardis.csv")
 
 usethis::use_data(dict_tardis_sentiment, overwrite = TRUE)
 

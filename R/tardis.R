@@ -41,27 +41,30 @@ lag1_indexed_vector <- function(vector_index, vec_to_lag) {
 #' @param dict_sentiments Optional sentiment dictionary. A data.frame with two columns: `word` and `value`
 #' @param dict_modifiers Optional modifiers dictionary. A data.frame with two columns: `word` and `value`
 #' @param dict_negations Optional negation dictionary. A data.frame with one column: `word`
-#' @param use_rcpp Testing/debug boolean: use rcpp functions instead of dplyr?
+#' @param verbose For debugging--should it print lots of messages to the console?
 #'
 #' @return A data.frame with one row for each input text and three new columns:
 #'         `sentiment_mean`: the average sentiment for each sentence in each text.
 #'         `sentiment_sd`: the standard deviation of sentence sentiments for each text.
 #'         `sentiment_range`: the range of sentence sentiments for each text.
 #' @export
-tardis1 <- function(
-  input_text= "I am happy. I am VERY happy!! ❤️ Not sad. Bad. Not bad. Not very bad.",
+tardis <- function(
+  input_text= "I am happy. I am VERY happy!! \u2764 Not sad. Bad. Not bad. Not very bad.",
   text_column = NA,
   dict_sentiments = NA,
   dict_modifiers = NA,
   dict_negations = NA,
-  use_rcpp = FALSE
+  verbose = FALSE
+  #, use_rcpp = FALSE
 
 
 ) {
+  # for dplyr data masking
+  sentences_orig <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
 
-  verbose <- TRUE
+  #verbose <- TRUE
 
-  warning("Still need to support ascii emojis like :) and :(")
+  if (verbose) warning("Still need to support ascii emojis like :) and :(")
 
   # multiplicative scale factors for negations and all caps words
   negation_factor <- 0.75
@@ -99,7 +102,7 @@ tardis1 <- function(
   # Sentiments
   if (all(is.na(dict_sentiments))){
     if (verbose) message ("Using default sentiments dictionary.")
-    dict_sentiments <- tardis::dict_tardis
+    dict_sentiments <- tardis::dict_tardis_sentiment
   }
 
   dict_sentiments$word <- stringr::str_squish(dict_sentiments$word)
@@ -141,7 +144,7 @@ tardis1 <- function(
 
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
-  emojis_in_dictionary <- dict_sentiments$word %>% stringr::str_subset(emo::ji_rx)
+  emojis_in_dictionary <- dict_sentiments$word %>% stringr::str_subset(emoji_regex_internal)
 
   emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
   regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"
@@ -226,7 +229,7 @@ tardis1 <- function(
 
 
   # get sentence-level scores
-  if (!use_rcpp){
+  if (TRUE) { #(!use_rcpp){
     result_sentences <- result %>%
       dplyr::group_by(text_id, sentence_id) %>%
       dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
@@ -239,8 +242,8 @@ tardis1 <- function(
       dplyr::mutate(sentence_score = sentence_score / sqrt((sentence_score * sentence_score) + 15)) %>%
       dplyr::select(-sentence_sum, -sentence_punct)
   } else {
-
-    result_sentences <- manual_summary_rcppdf2(result)
+   # not doing this now, it's not the bottleneck
+   # result_sentences <- manual_summary_rcppdf2(result)
 
   }
 

@@ -4,12 +4,18 @@ Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS
 Version: 0.1.0.9000
 Author: Christopher Belanger
 Maintainer: Christopher Belanger <christopher.a.belanger@gmail.com>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: TARDIS uses simple rules and dictionaries to analyze text. By
+    default it uses built-in dictionaries to measure sentiment, i.e. how happy 
+    or sad text is. It handles negations, so it knows "not happy" means "sad",
+    and it handles modifiers, so it knows that "very happy" is more happy than
+    "happy". TARDIS also supports unicode emojis and multi-word tokens (so you
+    can tell it that "supreme court" is neutral, instead of a combination of 
+    "supreme" (positive) and "court" (neutral). TARDIS supports user-defined
+    dictionaries and can be used to analyze other constructs beyond sentiment.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 Imports: 
     dplyr,
     magrittr,
