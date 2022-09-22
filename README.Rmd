@@ -44,7 +44,8 @@ library(tardis)
 
 text <- c("I am happy.",
           "I am really happy.",
-          "I am really happy!")
+          "I am really happy!",
+          "I am really not happy!")
 
 tardis::tardis(text) %>%
   dplyr::select(text, sentiment_mean) %>%
@@ -61,6 +62,15 @@ tardis::tardis(text) %>%
   knitr::kable()
 ```
 
+Or even passive-aggressive hostility:
+
+```{r}
+text <- "Die in a fire 😘" 
+
+tardis::tardis(text) %>%
+  dplyr::select(text, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  knitr::kable()
+```
 
 
 ## Known issues

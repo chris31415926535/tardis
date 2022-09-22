@@ -33,18 +33,20 @@ library(tardis)
 
 text <- c("I am happy.",
           "I am really happy.",
-          "I am really happy!")
+          "I am really happy!",
+          "I am really not happy!")
 
 tardis::tardis(text) %>%
   dplyr::select(text, sentiment_mean) %>%
   knitr::kable()
 ```
 
-| text               | sentiment_mean |
-|:-------------------|---------------:|
-| I am happy.        |      0.5718850 |
-| I am really happy. |      0.6695383 |
-| I am really happy! |      0.6987571 |
+| text                   | sentiment_mean |
+|:-----------------------|---------------:|
+| I am happy.            |      0.5718850 |
+| I am really happy.     |      0.6695383 |
+| I am really happy!     |      0.6987571 |
+| I am really not happy! |     -0.5968026 |
 
 Tardis also handles blocks of text differently from other
 sentiment-analysis algorithms, most of which treat blocks of text as
@@ -65,6 +67,20 @@ tardis::tardis(text) %>%
 | text                                                                                  | sentiment_mean | sentiment_sd | sentiment_range |
 |:--------------------------------------------------------------------------------------|---------------:|-------------:|----------------:|
 | This sentence is neutral. This one is really happy! This one is absolutely miserable. |      0.0613416 |    0.6455055 |        1.290718 |
+
+Or even passive-aggressive hostility:
+
+``` r
+text <- "Die in a fire 😘" 
+
+tardis::tardis(text) %>%
+  dplyr::select(text, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  knitr::kable()
+```
+
+| text            | sentiment_mean | sentiment_sd | sentiment_range |
+|:----------------|---------------:|-------------:|----------------:|
+| Die in a fire 😘 |     -0.0664554 |    0.9568319 |        1.353165 |
 
 ## Known issues
 
