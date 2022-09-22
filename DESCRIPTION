@@ -1,7 +1,7 @@
 Package: tardis
 Type: Package
 Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
-Version: 0.1.0
+Version: 0.1.0.9000
 Author: Christopher Belanger
 Maintainer: Christopher Belanger <christopher.a.belanger@gmail.com>
 Description: More about what it does (maybe more than one line)
@@ -16,3 +16,5 @@ Imports:
     stringi,
     stringr,
     tidyr
+Depends: 
+    R (>= 2.10)

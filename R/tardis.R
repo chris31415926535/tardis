@@ -1,19 +1,3 @@
-# Hello, world!
-#
-# This is an example function named 'hello'
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-
-
 # custom function to lag a vector based on the values in an index vector
 # essentially a custom version of dplyr::group() %>% dplyr::lag() but MUCH faster.
 # vector_index is a vector of monotonically increasing integers indicating groups
@@ -114,10 +98,8 @@ tardis1 <- function(
 
   # Sentiments
   if (all(is.na(dict_sentiments))){
-    if (verbose) message ("using default sentiments dictionary")
-    dict_sentiments <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
-      dplyr::add_row(word = "❤️", sentiment = 2.7) %>%
-      dplyr::add_row(word = "🤣", sentiment = 2.7)
+    if (verbose) message ("Using default sentiments dictionary.")
+    dict_sentiments <- tardis::dict_tardis
   }
 
   dict_sentiments$word <- stringr::str_squish(dict_sentiments$word)
@@ -143,14 +125,14 @@ tardis1 <- function(
 
   # Modifiers
   if (all(is.na(dict_modifiers))){
-    dict_modifiers <- tidyvader::get_vader_dictionaries()$dictionary[[4]]
+    dict_modifiers <- tardis::dict_vader_modifiers
   }
   dict_modifiers_vec <- dict_modifiers$booster_value
   names(dict_modifiers_vec) <- dict_modifiers$word
 
   # Negations
   if (all(is.na(dict_negations))){
-    dict_negations <- dplyr::tibble(word = tidyvader::get_vader_dictionaries()$dictionary[[3]])
+    dict_negations <- tardis::dict_vader_negations
   }
   dict_negations_vec <- rep(1, nrow(dict_negations))
   names(dict_negations_vec) <- dict_negations$word
@@ -170,6 +152,8 @@ tardis1 <- function(
 
   # need an id for each text, then one for each sentence.
   # tidying it and keeping track...
+  # FIXME this is a big bottleneck with lots of emojis
+  # unnesting is the big time suck
   sentences$text_id <- 1:nrow(sentences)
 
   sentences <- dplyr::mutate(sentences,
@@ -180,7 +164,6 @@ tardis1 <- function(
   result <- sentences
 
   # assign unique sentence ids
-  #result <- dplyr::mutate(result, sentence_id = 1:nrow(result))
   result$sentence_id <- 1:nrow(result)
 
   # count instances of exclamation points and double question marks
@@ -209,14 +192,6 @@ tardis1 <- function(
   result$negation1 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation)
   result$negation2 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation1)
   result$negation3 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation2)
-  #
-  # result <- result %>%
-  #   dplyr::group_by(text_id, sentence_id) %>%
-  #   dplyr::mutate(negation1  = dplyr::lag(negation, default = 0),
-  #                 negation2 = dplyr::lag(negation1, default = 0),
-  #                 negation3 = dplyr::lag(negation2, default = 0),
-  #   )
-
 
   # here we apply the negation factor, doing the scaling and the -1 powers separately so we can have fractional powers
   # if there are ALL CAPS negations. not presently implemented
@@ -232,12 +207,6 @@ tardis1 <- function(
   result$modifier1 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier)
   result$modifier2 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier1)
   result$modifier3 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier2)
-
-  # result <- result %>%
-  #   dplyr::mutate(modifier1 = dplyr::lag(modifier, default = 0),
-  #                 modifier2 = dplyr::lag(modifier1, default = 0),
-  #                 modifier3 = dplyr::lag(modifier2, default = 0)
-  #   )
 
   result$modifiers <- 1 + (result$modifier1 + 0.95 * result$modifier2 + 0.9 * result$modifier3)
 
@@ -274,23 +243,7 @@ tardis1 <- function(
     result_sentences <- manual_summary_rcppdf2(result)
 
   }
-  # result_sentences <- dplyr::tibble(sentence_score = manual_summary_rcpp(sentence_id = result$sentence_id,
-  #                                                                        sentiment_word = result$sentiment_word,
-  #                                                                        punct_exclamation = result$punct_exclamation,
-  #                                                                        punct_question = result$punct_question))
 
-
-  # result_summary %>%
-  #   dplyr::summarise(text = input_text,
-  #                    sentiment_mean = mean(sentence_score),
-  #                    sentiment_sd = sd(sentence_score),
-  #                    sentiment_range = max(sentence_score) - min(sentence_score))
-
-  # text-level scores, combining all sentences
-  # result_text <- dplyr::tibble(text = input_text,
-  #                              sentiment_mean = mean(result_sentences$sentence_score),
-  #                              sentiment_sd = sd(result_sentences$sentence_score),
-  #                              sentiment_range = max(result_sentences$sentence_score) - min(result_sentences$sentence_score))
   result_text <- result_sentences %>%
     dplyr::group_by(text_id) %>%
     dplyr::summarise(
@@ -304,123 +257,4 @@ tardis1 <- function(
 
   result_text
 }
-
-#
-# # trying it using vectorized stuff instead of dplyr for speed
-# tardis2 <- function(
-#   input_text= "happy. very happy. VERY happy! ❤️ ❤️❤️  very not happy. not sad. not very sad. hello there lovely. not happy. not happy! i am happy! i am happy!!! i am not happy. i am not not happy. i am not sad."
-# ) {
-#
-#   # multiplicative scale factors for negations and all caps words
-#   negation_factor <- 0.75
-#   allcaps_factor  <- 0.25 # this has 1 added to it before multiplying! anything over 0 represents an increase, anything below 1 represents a decrease
-#
-#   dict_sentiments <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
-#     dplyr::add_row(word = "❤️", sentiment = 2.7)
-#
-#   dict_modifiers <- tidyvader::get_vader_dictionaries()$dictionary[[4]]
-#
-#   dict_negations <- dplyr::tibble(
-#     word = tidyvader::get_vader_dictionaries()$dictionary[[3]],
-#     negation = 1
-#   )
-#   # dict_negations <- dplyr::tribble(
-#   #   ~word, ~negation,
-#   #   "not", 1,
-#   #   "never", 1,
-#   #   "don't", 1
-#   # )
-#
-#
-#
-#   #regex_pattern <- "(?<=[:punct:]\\s)" # emo::ji_rx
-#   #regex_pattern <- paste0("(?<=[:punct:]\\s|",emo::ji_rx,")") # emo::ji_rx
-#   #regex_pattern <- paste0("(?<=(\\.|!|\\?){1,5}\\s|",emo::ji_rx,")") # emo::ji_rx
-#
-#   #look behind for punctuation, look ahead for emojis
-#   regex_pattern <- paste0("(?<=(\\.|!|\\?){1,5}\\s)|(?=",emo::ji_rx,")") # emo::ji_rx
-#
-#
-#   #input_text <- paste0(input_text, "  ")
-#   sentences <- dplyr::tibble(sentence = as.vector(stringi::stri_split_regex(str=input_text, pattern = regex_pattern, simplify = TRUE, omit_empty = TRUE)))
-#
-#
-#
-#   result <- sentences %>%
-#     # count instances of exclamation points and double question marks
-#     dplyr::mutate(punct_exclamation = stringi::stri_count_fixed(sentence, pattern = "!")) %>%
-#     dplyr::mutate(punct_question = stringi::stri_count_fixed(sentence, pattern = "?")) %>%
-#     tibble::rowid_to_column("sentence_id") %>%
-#     dplyr::group_by(sentence_id) %>%
-#     dplyr::mutate(word = stringi::stri_split_regex(str = stringi::stri_trim_both(sentence), pattern = "\\s+")) %>%
-#     dplyr::select(-sentence) %>%
-#     tidyr::unnest(word) %>%
-#     # FIXME need to handle ascii emojis here like :) before removing leading/trailing punctuation
-#     dplyr::mutate(word = stringi::stri_replace_all(str = word, replacement = "", regex = "^[:punct:]+|[:punct:]$") ) %>%
-#
-#     #tidytext::unnest_tokens(word, sentence, to_lower = FALSE) %>% stop("unnest emojis")
-#
-#     # find any all-caps words
-#     dplyr::mutate(allcaps = 1 + (allcaps_factor * (word == toupper(word)))) %>%
-#
-#     # make all words lowercase
-#     dplyr::mutate(word = tolower(word)) %>%
-#
-#     # find all negations
-#     dplyr::left_join(dict_negations, by = "word") %>%
-#     dplyr::mutate(negation = tidyr::replace_na(negation, 0)) %>%
-#     #dplyr::mutate(negation = negation * (allcaps)) %>%
-#     dplyr::group_by(sentence_id) %>%
-#     dplyr::mutate(negation1  = dplyr::lag(negation),
-#                   negation2 = dplyr::lag(negation1),
-#                   negation3 = dplyr::lag(negation2),
-#     ) %>%
-#     dplyr::mutate(dplyr::across(c("negation1", "negation2", "negation3"), tidyr::replace_na, 0)) %>%
-#     # here we apply the negation factor, doing the scaling and the -1 powers separately so we can have fractional powers
-#     # if there are ALL CAPS negations. not presently implemented
-#     # negations
-#     dplyr::mutate(negations = (negation_factor)^(negation1 + negation2 + negation3)*(-1)^floor(negation1 + negation2 + negation3)) %>%
-#     dplyr::select(-negation, -negation1, -negation2, -negation3) %>%
-#
-#     # get modifiers
-#     dplyr::left_join(dict_modifiers, by = "word") %>%
-#     dplyr::mutate(booster_value = booster_value * allcaps) %>%
-#     dplyr::mutate(modifier1 = dplyr::lag(booster_value),
-#                   modifier2 = dplyr::lag(modifier1),
-#                   modifier3 = dplyr::lag(modifier2),
-#     ) %>%
-#     dplyr::mutate(dplyr::across(c("modifier1", "modifier2", "modifier3"), tidyr::replace_na, 0)) %>%
-#     dplyr::mutate(modifiers = 1 + (modifier1 + 0.95 * modifier2 + 0.9 * modifier3)) %>%
-#     dplyr::select(-booster_value, -booster_sign, -modifier1, -modifier2, -modifier3)  %>%
-#
-#
-#
-#
-#
-#     # get sentiments
-#     dplyr::left_join(dict_sentiments, by = "word") %>%
-#
-#     # process word-level sentiments
-#     # here we apply all the vectors we've built so far: applying to the sentiment-bearing
-#     # words the cumulative effects of any allcaps factor, any negations, and any modifiers
-#     dplyr::mutate(sentiment_word = sentiment * negations * modifiers * allcaps) %>%
-#
-#     # get sentence-level scores
-#     dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
-#                      sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question * 0.18, 0.96)
-#                      #,sentence_swing = max(sentiment_word) - min(sentiment_word)
-#     ) %>%
-#     dplyr::mutate(sentence_score = dplyr::if_else(sentence_sum > 0, sentence_sum + sentence_punct, sentence_sum - sentence_punct)) %>%
-#     dplyr::mutate(sentence_score = sentence_score / sqrt((sentence_score * sentence_score) + 15)) %>%
-#     dplyr::select(-sentence_sum, -sentence_punct)
-#
-#
-#   result %>%
-#     dplyr::summarise(text = input_text,
-#                      sentiment_mean = mean(sentence_score),
-#                      sentiment_sd = sd(sentence_score),
-#                      sentiment_range = max(sentence_score) - min(sentence_score))
-#
-# }
-
 
