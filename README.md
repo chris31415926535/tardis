@@ -16,6 +16,12 @@ combination of “supreme” (positive) and “court” (neutral). TARDIS also
 supports user-defined dictionaries and can be used to analyze other
 constructs beyond sentiment.
 
+## Features
+
+-   Handles ASCII and UTF-8 emojis :) 👍
+-   Based on simple surveyable rules
+-   Highly customizable
+
 ## Installation
 
 You can install the development version of tardis like so:
@@ -82,8 +88,64 @@ tardis::tardis(text) %>%
 |:----------------|---------------:|-------------:|----------------:|
 | Die in a fire 😘 |     -0.0664554 |    0.9568319 |        1.353165 |
 
+## The algorithm
+
+-   Split text into sentences.
+-   Count the number of exclamation points and question marks in the
+    sentence.
+-   Split each sentence into tokens. These will usually be words, but
+    can also be multi-word strings (e.g. “supreme court”) or emojis.
+    -   Strip each token’s leading/trailing whitespace and check each
+        token against the dictionary. This captures emojis like “:)”.
+    -   Strip each token’s leading/trailing punctuation.
+    -   Check to see if each token is capitalized.
+    -   Check to see if each token is a modifier (e.g. “very”,
+        “somewhat”).
+    -   Check to see if each token is a negator (e.g. “never”, “not”).
+    -   Make each token lowercase and check it against the dictionary.
+        -   Note this is the second time we check the dictionary: the
+            first time uses original tokens so will match things like
+            “:)” but not like “Happy!” and this time we’ve removed
+            punctuation and made it lowercase so it will match “happy”.
+-   Now we have token-level information: its raw dictionary sentiment,
+    if it was capitalized, if it is a modifier, or if it is a negator.
+    -   We compute each token’s *modified* sentiment, which is a
+        function of its own raw sentiment (if applicable), whether it
+        was all-caps, and the three preceding tokens.
+    -   For each negator in the preceeding 3 tokens, we flip the current
+        token’s valence and multiply by a value less than 1. The default
+        is -0.75.
+        -   In other words, sentiment changes direction and becomes more
+            muted. “Not bad” is not “bad,” but not as good as “Good.”
+    -   For each modifier in the preceeding 3 tokens, we multiply the
+        current token’s score by the appropriate value to scale
+        sentiment up or down. Modifiers are attenuated the farther back
+        they are.
+    -   If the token was ALL CAPS, we scale its sentiment up. The
+        default scale factor is 0.25.
+-   We now have our modified token values, which we combine into raw
+    sentence scores.
+    -   We sum all of the modified token scores.
+    -   We add or subtract any sentence-level punctuation score from
+        exclamation points and question marks.
+-   We then scale our raw sentence scores to be between -1 and 1 using
+    the sigmoid function $x / \sqrt(x^2 + 15)$. *Note that this should
+    be a user-supplied parameter.*
+-   We then compute text-level scores by finding the mean, sd, and range
+    of sentence scores within each text.
+
+## Benchmarking
+
+The function is a bit slow right now, handling roughly 3000
+sentences/second. Most of the bottlenecks I’ve identified are with
+regular expressions using emojis and some `tidyr` functions. Here is a
+rough benchmark for the sample data in `stringr::sentences`:
+
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+
+I’d like to get this much faster but it may require re-writing the
+bottlenecks using RCpp.
+
 ## Known issues
 
--   ASCII emojis like :) and :( aren’t supported yet.
--   Bug: Sentences with more than one punctuation mark aren’t handled
-    properly.
+-   Larger datasets (e.g. >1000 reddit comments) can run slowly.

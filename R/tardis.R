@@ -64,7 +64,7 @@ tardis <- function(
 
   #verbose <- TRUE
 
-  if (verbose) warning("Still need to support ascii emojis like :) and :(")
+  #if (verbose) warning("Still need to support ascii emojis like :) and :(")
 
   # multiplicative scale factors for negations and all caps words
   negation_factor <- 0.75
@@ -72,10 +72,7 @@ tardis <- function(
 
 
   ################################.
-  # INPUT TEXT SETUP
-
-
-
+  # INPUT TEXT SETUP ----
 
   # VECTOR INPUT: set up
   if (is.vector(input_text)){
@@ -92,12 +89,11 @@ tardis <- function(
     original_input <- unlist(input_text[text_column])
     sentences <- dplyr::rename(input_text,
                                sentences_orig = dplyr::all_of(text_column))
-
   }
 
 
   ########################################.
-  ##### DICTIONARY SETUP
+  # DICTIONARY SETUP ----
 
   # Sentiments
   if (all(is.na(dict_sentiments))){
@@ -140,7 +136,8 @@ tardis <- function(
   dict_negations_vec <- rep(1, nrow(dict_negations))
   names(dict_negations_vec) <- dict_negations$word
 
-  # REGEX TO SPLIT TEXT INTO SENTENCES
+  #################### -
+  # SPLIT TEXT INTO SENTENCES ----
 
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
@@ -149,14 +146,15 @@ tardis <- function(
   emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
   regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"
 
-  if (length(emojis_in_dictionary) > 0) regex_pattern <- paste0(regex_pattern, "|(?=",emoji_regex,")") # emo::ji_rx
-
+  # FIXME TODO: lookahead and lookbehind emoji regexes are VERY slow, so just lookahead for now
+  if (length(emojis_in_dictionary) > 0) regex_pattern <- paste0(regex_pattern, "|(?=",emoji_regex,")") # |(?<=",emoji_regex,")") # emo::ji_rx
 
 
   # need an id for each text, then one for each sentence.
   # tidying it and keeping track...
   # FIXME this is a big bottleneck with lots of emojis
   # unnesting is the big time suck
+  # right now splits emojis into own sentence with lookahead and lookbehind
   sentences$text_id <- 1:nrow(sentences)
 
   sentences <- dplyr::mutate(sentences,
@@ -169,6 +167,9 @@ tardis <- function(
   # assign unique sentence ids
   result$sentence_id <- 1:nrow(result)
 
+  ######################## -
+  # PUNCTUATION AND CAPS ----
+
   # count instances of exclamation points and double question marks
   result$punct_exclamation <- stringi::stri_count_fixed(result$sentence, pattern = "!")
   result$punct_question <- stringi::stri_count_fixed(result$sentence, pattern = "?")
@@ -177,15 +178,24 @@ tardis <- function(
 
   result <- tidyr::unnest(result, word)
 
-  # FIXME need to handle ascii emojis here like :) before removing leading/trailing punctuation
 
-  result$word <- stringi::stri_replace_all(str = result$word, replacement = "", regex = "^[:punct:]+|[:punct:]$")
+  # get sentiment now before we lose any emojis
+  # doing it twice is inefficient but is i think the only way
+  result$sentiment1 <- dict_sentiments_vec[result$word]
+
+  # FIXME need to handle ascii emojis here like :) before removing leading/trailing punctuation
+  # gsub is faster than stringii
+  result$word <-  gsub(x = result$word, pattern = "^[[:punct:]]*|[[:punct:]]*$", replacement = "")
+    #stringi::stri_replace_all(str = result$word, replacement = "", regex = "^[[:punct:]]+|[[:punct:]]$")
 
   # find any all-caps words
   result$allcaps <- 1 + (allcaps_factor * (result$word == toupper(result$word)))
 
   # make all words lowercase
   result$word <- tolower(result$word)
+
+  ###################### -
+  # NEGATIONS ----
 
   # find all negations
   result$negation <- dict_negations_vec[result$word]
@@ -200,6 +210,9 @@ tardis <- function(
   # if there are ALL CAPS negations. not presently implemented
   # negations
   result$negations <- (negation_factor)^(result$negation1 + result$negation2 + result$negation3)*(-1)^floor(result$negation1 + result$negation2 + result$negation3)
+
+  ##########################-
+  # MODIFIERS ----
 
   result$modifier <- dict_modifiers_vec[result$word]
   result$modifier <- (dplyr::if_else(is.na(result$modifier ), 0, result$modifier))
@@ -217,9 +230,24 @@ tardis <- function(
   # cleanup for testing
   result <- dplyr::select(result, -negation1, -negation2, -negation3, -modifier1, -modifier2, -modifier3)
 
-  # get sentiments
+  ########################-
+  # WORD-LEVEL SENTIMENTS ----
+  # get sentiments for words with punctuation removed
 
-  result$sentiment <- dict_sentiments_vec[result$word]
+  result$sentiment2 <- dict_sentiments_vec[result$word]
+
+  # get sentiment by using either the with-punctuation or without-punctuation values
+  # this should let us capture both emojis and plaintext..
+  result$sentiment1[is.na(result$sentiment1)] <- 0
+  result$sentiment2[is.na(result$sentiment2)] <- 0
+
+  result$sentiment <- purrr::map2_dbl(result$sentiment1, result$sentiment2, function(x,y) {
+    if (x == y) output <- x
+    if (x ==0 & y != 0) output <- y
+    if (x !=0 & y == 0) output <- x
+    if (x !=0 & y != 0 & x != y) output <- x # should we issue a warning here?
+    return(output)
+  })
 
   # process word-level sentiments
   # here we apply all the vectors we've built so far: applying to the sentiment-bearing
@@ -227,6 +255,9 @@ tardis <- function(
 
   result$sentiment_word <- result$sentiment * result$negations * result$modifiers * result$allcaps
 
+
+  ########################-
+  # SENTENCE SCORES ----
 
   # get sentence-level scores
   if (TRUE) { #(!use_rcpp){
@@ -247,6 +278,8 @@ tardis <- function(
 
   }
 
+  #################-
+  # TEXT SCORES ----
   result_text <- result_sentences %>%
     dplyr::group_by(text_id) %>%
     dplyr::summarise(
@@ -257,6 +290,9 @@ tardis <- function(
   # add back original text, remove text_id column
   result_text[text_column] <- original_input
   result_text$text_id <- NULL
+
+  # reorder to put text first
+  result_text <- result_text[,c(4,1,2,3)]
 
   result_text
 }

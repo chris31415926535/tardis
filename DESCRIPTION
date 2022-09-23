@@ -1,7 +1,7 @@
 Package: tardis
 Type: Package
 Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
-Version: 0.1.0.9000
+Version: 0.1.1.9000
 Author: Christopher Belanger
 Maintainer: Christopher Belanger <christopher.a.belanger@gmail.com>
 Description: TARDIS uses simple rules and dictionaries to analyze text. By
@@ -26,3 +26,6 @@ Depends:
     R (>= 2.10)
 URL: https://github.com/chris31415926535/tardis
 BugReports: https://github.com/chris31415926535/tardis/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
