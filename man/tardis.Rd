@@ -5,7 +5,7 @@
 \title{Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)}
 \usage{
 tardis(
-  input_text = c("I am happy.", "I am VERY happy!!", "❤", "Not sad.", "Bad.",
+  input_text = c("I am happy.", "I am VERY happy!!", ":)", "Not sad.", "Bad.",
     "Not bad.", "A happy sentence! And a sad one. In the same text."),
   text_column = NA,
   dict_sentiments = NA,
@@ -40,10 +40,27 @@ A data.frame with one row for each input text and three new columns:
         `sentiment_range`: the range of sentence sentiments for each text.
 }
 \description{
-function takes a single text string with several sentences (e.g. a reddit post)
-runs vaderish sentiment algorithm on each sentence
-returns mean, sd, and range of sentiments so acquired
-rationale: doesn't make sense to apply sentence-level analysis to paragraphs.
-especially for online communications where people can use quick swings in sentiment
-to express irony.
+This function uses dictionaries (either the included defaults or user-supplied)
+custom dictionaries) and simple rules to measure the sentiment of supplied text.
+"Sentiment" means roughly the emotion expressed in the text, where emotions are
+collapsed into positive (e.g. happy) or negative (e.g. sad, angry).
+}
+\details{
+Roughly, each word's sentiment is a property of its dictionary-given sentiment,
+whether it's written in all-caps or not, and the three preceding words. A preceding
+negation (e.g. "not") will reverse and reduce the sentiment--turning a positive
+into a slightly less extreme negative, or vice-versa--and a preceding modifier
+can either increase/decrease the sentiment (e.g. "very" will increase it,
+"somewhat" will decrease it).
+
+Sentences are scored based on their words and the presence of exclamation or
+question marks.
+
+If a supplied text string has more than one sentence, this function will also
+return the mean, standard deviation, and range of sentiments expressed in its
+sentences. The rationale is that it doesn't make sense to apply sentence-level
+analysis to paragraphs, especially for online communications where people can
+use quick swings in sentiment to express irony.
+
+Input can be supplied in a data.frame or character vector.
 }

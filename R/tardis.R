@@ -1,12 +1,28 @@
 
 #' Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
 #'
-#' function takes a single text string with several sentences (e.g. a reddit post)
-#' runs vaderish sentiment algorithm on each sentence
-#' returns mean, sd, and range of sentiments so acquired
-#' rationale: doesn't make sense to apply sentence-level analysis to paragraphs.
-#' especially for online communications where people can use quick swings in sentiment
-#' to express irony.
+#' This function uses dictionaries (either the included defaults or user-supplied)
+#' custom dictionaries) and simple rules to measure the sentiment of supplied text.
+#' "Sentiment" means roughly the emotion expressed in the text, where emotions are
+#' collapsed into positive (e.g. happy) or negative (e.g. sad, angry).
+#'
+#' Roughly, each word's sentiment is a property of its dictionary-given sentiment,
+#' whether it's written in all-caps or not, and the three preceding words. A preceding
+#' negation (e.g. "not") will reverse and reduce the sentiment--turning a positive
+#' into a slightly less extreme negative, or vice-versa--and a preceding modifier
+#' can either increase/decrease the sentiment (e.g. "very" will increase it,
+#' "somewhat" will decrease it).
+#'
+#' Sentences are scored based on their words and the presence of exclamation or
+#' question marks.
+#'
+#' If a supplied text string has more than one sentence, this function will also
+#' return the mean, standard deviation, and range of sentiments expressed in its
+#' sentences. The rationale is that it doesn't make sense to apply sentence-level
+#' analysis to paragraphs, especially for online communications where people can
+#' use quick swings in sentiment to express irony.
+#'
+#' Input can be supplied in a data.frame or character vector.
 #'
 #' @param input_text Text to analyze, either a character vector or a data.frame with a column of text.
 #' @param text_column If using data.frame input, the name of the column of text to analyze.
@@ -23,7 +39,7 @@
 #'         `sentiment_range`: the range of sentence sentiments for each text.
 #' @export
 tardis <- function(
-  input_text= c("I am happy.", "I am VERY happy!!", "\u2764", "Not sad.", "Bad.", "Not bad.", "A happy sentence! And a sad one. In the same text."),
+  input_text= c("I am happy.", "I am VERY happy!!", ":)", "Not sad.", "Bad.", "Not bad.", "A happy sentence! And a sad one. In the same text."),
   text_column = NA,
   dict_sentiments = NA,
   dict_modifiers = NA,
@@ -55,6 +71,7 @@ tardis <- function(
     text_column <- "text"
     original_input <- stringr::str_trim(input_text)
     sentences <- dplyr::tibble(sentences_orig = original_input)
+    final_output <- sentences
   }
 
   # DATAFRAME INPUT: set up
@@ -64,6 +81,7 @@ tardis <- function(
     original_input <- unlist(input_text[text_column])
     sentences <- dplyr::rename(input_text,
                                sentences_orig = dplyr::all_of(text_column))
+    final_output <- input_text
   }
 
 
@@ -214,13 +232,14 @@ tardis <- function(
   result_text <- dplyr::as_tibble(result_text)
 
   # add back original text, remove text_id column
-  result_text[text_column] <- original_input
+  #result_text[text_column] <- original_input
   result_text$text_id <- NULL
 
   # reorder to put text first
-  result_text <- result_text[,c(4,1,2,3)]
+  #result_text <- result_text[,c(4,1,2,3)]
 
-  result_text
+  dplyr::bind_cols(final_output, result_text)
+  #result_text
 }
 
 

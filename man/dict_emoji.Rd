@@ -8,7 +8,7 @@
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 969 rows and 2 columns.
 }
 \source{
-\url{https://doi.org/10.1371/journal.pone.0144296}
+\doi{10.1371/journal.pone.0144296}
 }
 \usage{
 dict_emoji

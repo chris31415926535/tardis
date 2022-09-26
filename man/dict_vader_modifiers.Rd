@@ -8,7 +8,7 @@
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 84 rows and 3 columns.
 }
 \source{
-\url{https://cran.r-project.org/web/packages/vader/index.html}
+\url{https://CRAN.R-project.org/package=vader}
 }
 \usage{
 dict_vader_modifiers

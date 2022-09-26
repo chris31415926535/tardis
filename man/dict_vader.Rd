@@ -13,7 +13,7 @@ A data frame with 7506 rows and 2 variables:
 }
 }
 \source{
-\url{https://cran.r-project.org/web/packages/vader/index.html}
+\url{https://CRAN.R-project.org/package=vader}
 }
 \usage{
 dict_vader

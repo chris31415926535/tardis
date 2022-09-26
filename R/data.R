@@ -11,17 +11,17 @@
 #'   \item{sentiment}{sentiment as number}
 #'   ...
 #' }
-#' @source \url{https://cran.r-project.org/web/packages/vader/index.html}
+#' @source \url{https://CRAN.R-project.org/package=vader}
 "dict_vader"
 
 #' Modifier dictionary from VADER.
 #'
-#' @source \url{https://cran.r-project.org/web/packages/vader/index.html}
+#' @source \url{https://CRAN.R-project.org/package=vader}
 "dict_vader_modifiers"
 
 #' Negation dictionary from VADER.
 #'
-#' @source \url{https://cran.r-project.org/web/packages/vader/index.html}
+#' @source \url{https://CRAN.R-project.org/package=vader}
 "dict_vader_negations"
 
 #' Sentiment dictionary from Hu and Liu (2004) and package TidyText.
@@ -35,7 +35,7 @@
 #'
 #' @references {Kralj Novak P, Smailović J, Sluban B, Mozetič I (2015) Sentiment of
 #'  Emojis. PLoS ONE 10(12): e0144296.}
-#' @source \url{https://doi.org/10.1371/journal.pone.0144296}
+#' @source \doi{10.1371/journal.pone.0144296}
 "dict_emoji"
 
 #' Sentiment dictionary for TARDIS package.

@@ -113,12 +113,12 @@ tardis::tardis(text) %>%
     -   We compute each token’s *modified* sentiment, which is a
         function of its own raw sentiment (if applicable), whether it
         was all-caps, and the three preceding tokens.
-    -   For each negator in the preceeding 3 tokens, we flip the current
+    -   For each negator in the preceding 3 tokens, we flip the current
         token’s valence and multiply by a value less than 1. The default
         is -0.75.
         -   In other words, sentiment changes direction and becomes more
             muted. “Not bad” is not “bad,” but not as good as “Good.”
-    -   For each modifier in the preceeding 3 tokens, we multiply the
+    -   For each modifier in the preceding 3 tokens, we multiply the
         current token’s score by the appropriate value to scale
         sentiment up or down. Modifiers are attenuated the farther back
         they are.
@@ -147,3 +147,32 @@ data from `stringr::sentences`:
 
 -   Testing and generalizing with other dictionaries/semantic
     constructs.
+
+## Similar projects and packages
+
+-   Tardis was directly inspired by
+    [VADER](https://github.com/cjhutto/vaderSentiment), which has an R
+    implementation on CRAN in the package
+    [vader](https://cran.r-project.org/package=vader), and an
+    implementation I wrote that’s not on cran called
+    [tidyvader](https://github.com/chris31415926535/tidyvader). Tardis
+    also incorporates sentiment data from the VADER project.
+-   [Tidytext](https://github.com/juliasilge/tidytext) is a wonderful
+    package for text mining in R. Tardis incorporates some sentiment
+    data from Tidytext.
+
+## References
+
+Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based
+Model for Sentiment Analysis of Social Media Text. Eighth International
+Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June
+2014.
+
+Kralj Novak P, Smailović J, Sluban B, Mozetič I (2015) Sentiment of
+Emojis. PLoS ONE 10(12): e0144296.
+<https://doi.org/10.1371/journal.pone.0144296>
+
+Minqing Hu and Bing Liu, “Mining and summarizing customer reviews.”,
+Proceedings of the ACM SIGKDD International Conference on Knowledge
+Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25,
+2004.
