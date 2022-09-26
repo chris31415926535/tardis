@@ -48,6 +48,7 @@ lag1_indexed_vector <- function(vector_index, vec_to_lag) {
 #'         `sentiment_sd`: the standard deviation of sentence sentiments for each text.
 #'         `sentiment_range`: the range of sentence sentiments for each text.
 #' @export
+
 tardis <- function(
   input_text= "I am happy. I am VERY happy!! \u2764 Not sad. Bad. Not bad. Not very bad.",
   text_column = NA,
@@ -55,7 +56,7 @@ tardis <- function(
   dict_modifiers = NA,
   dict_negations = NA,
   verbose = FALSE
-  #, use_rcpp = FALSE
+  #  , use_rcpp = FALSE
 
 
 ) {
@@ -186,7 +187,7 @@ tardis <- function(
   # FIXME need to handle ascii emojis here like :) before removing leading/trailing punctuation
   # gsub is faster than stringii
   result$word <-  gsub(x = result$word, pattern = "^[[:punct:]]*|[[:punct:]]*$", replacement = "")
-    #stringi::stri_replace_all(str = result$word, replacement = "", regex = "^[[:punct:]]+|[[:punct:]]$")
+  #stringi::stri_replace_all(str = result$word, replacement = "", regex = "^[[:punct:]]+|[[:punct:]]$")
 
   # find any all-caps words
   result$allcaps <- 1 + (allcaps_factor * (result$word == toupper(result$word)))
@@ -273,8 +274,8 @@ tardis <- function(
       dplyr::mutate(sentence_score = sentence_score / sqrt((sentence_score * sentence_score) + 15)) %>%
       dplyr::select(-sentence_sum, -sentence_punct)
   } else {
-   # not doing this now, it's not the bottleneck
-   # result_sentences <- manual_summary_rcppdf2(result)
+    # not doing this now, it's not the bottleneck
+    # result_sentences <- manual_summary_rcppdf2(result)
 
   }
 
@@ -286,6 +287,210 @@ tardis <- function(
       sentiment_mean = mean(sentence_score),
       sentiment_sd = stats::sd(sentence_score),
       sentiment_range = max(sentence_score) - min(sentence_score))
+
+  # add back original text, remove text_id column
+  result_text[text_column] <- original_input
+  result_text$text_id <- NULL
+
+  # reorder to put text first
+  result_text <- result_text[,c(4,1,2,3)]
+
+  result_text
+}
+
+
+
+
+
+tardis1 <- function(
+  input_text= "I am happy. I am VERY happy!! \u2764 Not sad. Bad. Not bad. Not very bad.",
+  text_column = NA,
+  dict_sentiments = NA,
+  dict_modifiers = NA,
+  dict_negations = NA,
+  verbose = FALSE
+  , use_rcpp = FALSE
+
+
+) {
+  # for dplyr data masking
+  sentences_orig <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
+
+  #verbose <- TRUE
+
+  #if (verbose) warning("Still need to support ascii emojis like :) and :(")
+
+  # multiplicative scale factors for negations and all caps words
+  negation_factor <- 0.75
+  allcaps_factor  <- 0.25 # this has 1 added to it before multiplying! anything over 0 represents an increase, anything below 1 represents a decrease
+
+
+  ################################.
+  # INPUT TEXT SETUP ----
+
+  # VECTOR INPUT: set up
+  if (is.vector(input_text)){
+    if (verbose) message ("vector input")
+    text_column <- "text"
+    original_input <- stringr::str_trim(input_text)
+    sentences <- dplyr::tibble(sentences_orig = original_input)
+  }
+
+  # DATAFRAME INPUT: set up
+
+  if (is.data.frame(input_text)){
+    if (verbose) message ("data frame input")
+    original_input <- unlist(input_text[text_column])
+    sentences <- dplyr::rename(input_text,
+                               sentences_orig = dplyr::all_of(text_column))
+  }
+
+
+  ########################################.
+  # DICTIONARY SETUP ----
+
+  # Sentiments
+  if (all(is.na(dict_sentiments))){
+    if (verbose) message ("Using default sentiments dictionary.")
+    dict_sentiments <- tardis::dict_tardis_sentiment
+  }
+
+  dict_sentiments$word <- stringr::str_squish(dict_sentiments$word)
+
+  # IF MULTI-WORD NGRAMS IN SENTIMENT DICTIONARY
+  # if there are any multi-word ngrams (e.g. "supreme court")
+  multi_word_indices <- grep(pattern = " ", x = dict_sentiments$word, fixed = TRUE)
+  if (length(multi_word_indices) > 0) {
+    if (verbose) message ("Found multi-word ngrams in sentiment dictionary.")
+    for (i in 1:length(multi_word_indices)) {
+      old_word <- dict_sentiments$word[[multi_word_indices[[i]]]]
+      new_word <- gsub(x = old_word, pattern = " ", replacement = "X", fixed = TRUE)
+
+      dict_sentiments$word[[multi_word_indices[[i]]]] <- new_word
+      sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
+
+    }
+
+  }
+
+  dict_sentiments_vec <- dict_sentiments$sentiment
+  names(dict_sentiments_vec) <- dict_sentiments$word
+
+  # Modifiers
+  if (all(is.na(dict_modifiers))){
+    dict_modifiers <- tardis::dict_vader_modifiers
+  }
+  dict_modifiers_vec <- dict_modifiers$booster_value
+  names(dict_modifiers_vec) <- dict_modifiers$word
+
+  # Negations
+  if (all(is.na(dict_negations))){
+    dict_negations <- tardis::dict_vader_negations
+  }
+  dict_negations_vec <- rep(1, nrow(dict_negations))
+  names(dict_negations_vec) <- dict_negations$word
+
+  #################### -
+  # SPLIT TEXT INTO SENTENCES ----
+
+  if (!use_rcpp)  result <- split_text_into_sentences(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
+  if (use_rcpp)  result <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
+
+  ######################## -
+  # SENTENCE PUNCTUATION  ----
+
+  # count instances of exclamation points and double question marks
+  result$punct_exclamation <- stringi::stri_count_fixed(result$sentence, pattern = "!")
+  result$punct_question <- stringi::stri_count_fixed(result$sentence, pattern = "?")
+
+  ######################## -
+  # SPLIT INTO WORDS ----
+  # NB need stri_enc_tooutf8 if using rcpp
+  result$word <- stringi::stri_split_regex(str = stringi::stri_trim_both(result$sentence), pattern = "\\s+")
+
+  result <- tidyr::unnest(result, word)
+
+  ######################## -
+  # EMOJI SENTIMENTS ----
+  # get sentiment now before we lose any emojis
+  # doing it twice is inefficient but is i think the only way
+  result$sentiment1 <- dict_sentiments_vec[result$word]
+
+  ####################### -
+  # STRIP LEADING/TRAILING PUNCTUATION
+  # we've already handled emojis
+  # gsub is faster than stringii
+  result$word <-  gsub(x = result$word, pattern = "^[[:punct:]]*|[[:punct:]]*$", replacement = "")
+  #stringi::stri_replace_all(str = result$word, replacement = "", regex = "^[[:punct:]]+|[[:punct:]]$")
+
+  ########################## -
+  # WORD CAPITALIZATION ----
+  # this is surprisingly slow, toupper()
+  # roughly 10x faster if we do it on the original character vectors before
+  # breaking it into words
+  result <- handle_capitalizations(result)
+
+  ###################### -
+  # NEGATIONS ----
+
+  # find all negations
+  # much faster than the capitalization stuff
+  result <- handle_negations(result, dict_negations_vec)
+
+  ##########################-
+  # MODIFIERS ----
+  result <- handle_modifiers(result, dict_modifiers_vec)
+
+
+  ########################-
+  # WORD-LEVEL SENTIMENTS ----
+  # get sentiments for words with punctuation removed
+
+  result$sentiment2 <- dict_sentiments_vec[result$word]
+
+  # get sentiment by using either the with-punctuation or without-punctuation values
+  # this should let us capture both emojis and plaintext..
+  result$sentiment1[is.na(result$sentiment1)] <- 0
+  result$sentiment2[is.na(result$sentiment2)] <- 0
+
+  # this purrr::map is kind of slow
+  # rcpp function brings ~ 100ms down to ~ 18
+  if (use_rcpp) result$sentiment <- get_nonzero_value_rcpp(result$sentiment1, result$sentiment2)
+  if (!us_rcpp) {
+    result$sentiment <- purrr::map2_dbl(result$sentiment1, result$sentiment2, function(x,y) {
+      if (x == y) output <- x
+      if (x ==0 & y != 0) output <- y
+      if (x !=0 & y == 0) output <- x
+      if (x !=0 & y != 0 & x != y) output <- x # should we issue a warning here?
+      return(output)
+    })
+  }
+
+  # process word-level sentiments
+  # here we apply all the vectors we've built so far: applying to the sentiment-bearing
+  # words the cumulative effects of any allcaps factor, any negations, and any modifiers
+
+  result$sentiment_word <- result$sentiment * result$negations * result$modifiers * result$allcaps
+
+
+  ########################-
+  # SENTENCE SCORES ----
+  # get sentence-level scores
+  # This is a bottleneck, but using base R and data.table internally helped
+
+  result_sentences <- handle_sentence_scores(result, with_dplyr = FALSE, with_dt = TRUE)
+
+
+  #################-
+  # TEXT SCORES ----
+  result_text <- result_sentences %>%
+    dplyr::group_by(text_id) %>%
+    dplyr::summarise(
+      sentiment_mean = mean(sentence_score),
+      sentiment_sd = stats::sd(sentence_score),
+      sentiment_range = max(sentence_score) - min(sentence_score))
+
+  result_text <- dplyr::as_tibble(result_text)
 
   # add back original text, remove text_id column
   result_text[text_column] <- original_input
