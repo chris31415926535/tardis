@@ -1,4 +1,4 @@
-# tardis 0.1.2.9000
+# tardis 0.1.2
 
 * Added a `NEWS.md` file to track changes to the package.
 * Migrated internally to use cpp11 for roughly 6x speed increase.
