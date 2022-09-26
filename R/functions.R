@@ -1,3 +1,7 @@
+#' @useDynLib tardis, .registration = TRUE
+
+
+
 # reddit_data <- pushshiftR::get_reddit_comments(q="corgis", size = 500)
 # dict_sentiments <- tardis::dict_tardis_sentiment
 #
@@ -51,7 +55,7 @@ handle_sentence_scores <- function(result, with_dplyr = TRUE, with_dt = TRUE, si
   return(result_sentences)
 }
 
-handle_capitalizations <- function(result){
+handle_capitalizations <- function(result, allcaps_factor){
   result$allcaps <- 1 + (allcaps_factor * (result$word == toupper(result$word)))
 
   # make all words lowercase
@@ -61,7 +65,7 @@ handle_capitalizations <- function(result){
   return(result)
 }
 
-handle_negations <- function(result, dict_negations_vec){
+handle_negations <- function(result, dict_negations_vec, negation_factor){
   result$negation <- dict_negations_vec[result$word]
   result$negation <- (dplyr::if_else(is.na(result$negation ), 0, result$negation))
 
@@ -154,11 +158,11 @@ split_text_into_sentences_rcpp <- function(sentences, emoji_regex_internal, dict
   step2 <- step1 %>%
     dplyr::mutate(sentences_noemojis = stringr::str_remove_all(sentences_orig, emoji_regex))
 
-  step3rcpp <- step2 %>%
+  step3cpp11 <- step2 %>%
     #dplyr::mutate(sentence = stringi::stri_split_regex(str = sentences_noemojis, pattern = regex_pattern, simplify = FALSE, omit_empty = TRUE))
-    dplyr::mutate(sentence = purrr::map(sentences_noemojis, split_string_after_punctuation))
+    dplyr::mutate(sentence = purrr::map(sentences_noemojis, split_string_after_punctuation_cpp11)) #split_string_after_punctuation))
 
-  step4 <- step3rcpp %>%
+  step4 <- step3cpp11 %>%
     dplyr::mutate(sentences = purrr::map2(sentence, emojis, function(x,y) {
       c(x, y)
     }))

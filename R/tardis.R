@@ -56,7 +56,7 @@ tardis <- function(
   dict_modifiers = NA,
   dict_negations = NA,
   verbose = FALSE
-  #  , use_rcpp = FALSE
+  #  , use_cpp11 = FALSE
 
 
 ) {
@@ -261,7 +261,7 @@ tardis <- function(
   # SENTENCE SCORES ----
 
   # get sentence-level scores
-  if (TRUE) { #(!use_rcpp){
+  if (TRUE) { #(!use_cpp11){
     result_sentences <- result %>%
       dplyr::group_by(text_id, sentence_id) %>%
       dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
@@ -301,7 +301,7 @@ tardis <- function(
 
 
 
-
+#' @export
 tardis1 <- function(
   input_text= "I am happy. I am VERY happy!! \u2764 Not sad. Bad. Not bad. Not very bad.",
   text_column = NA,
@@ -309,7 +309,7 @@ tardis1 <- function(
   dict_modifiers = NA,
   dict_negations = NA,
   verbose = FALSE
-  , use_rcpp = FALSE
+  , use_cpp11 = FALSE
 
 
 ) {
@@ -393,8 +393,8 @@ tardis1 <- function(
   #################### -
   # SPLIT TEXT INTO SENTENCES ----
 
-  if (!use_rcpp)  result <- split_text_into_sentences(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
-  if (use_rcpp)  result <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
+  if (!use_cpp11)  result <- split_text_into_sentences(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
+  if (use_cpp11)  result <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
 
   ######################## -
   # SENTENCE PUNCTUATION  ----
@@ -428,14 +428,14 @@ tardis1 <- function(
   # this is surprisingly slow, toupper()
   # roughly 10x faster if we do it on the original character vectors before
   # breaking it into words
-  result <- handle_capitalizations(result)
+  result <- handle_capitalizations(result, allcaps_factor)
 
   ###################### -
   # NEGATIONS ----
 
   # find all negations
   # much faster than the capitalization stuff
-  result <- handle_negations(result, dict_negations_vec)
+  result <- handle_negations(result, dict_negations_vec, negation_factor)
 
   ##########################-
   # MODIFIERS ----
@@ -455,8 +455,8 @@ tardis1 <- function(
 
   # this purrr::map is kind of slow
   # rcpp function brings ~ 100ms down to ~ 18
-  if (use_rcpp) result$sentiment <- get_nonzero_value_rcpp(result$sentiment1, result$sentiment2)
-  if (!us_rcpp) {
+  if (use_cpp11) result$sentiment <- get_nonzero_value_cpp11(result$sentiment1, result$sentiment2)
+  if (!use_cpp11) {
     result$sentiment <- purrr::map2_dbl(result$sentiment1, result$sentiment2, function(x,y) {
       if (x == y) output <- x
       if (x ==0 & y != 0) output <- y
