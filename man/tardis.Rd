@@ -5,13 +5,15 @@
 \title{Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)}
 \usage{
 tardis(
-  input_text = "I am happy. I am VERY happy!! ❤ Not sad. Bad. Not bad. Not very bad.",
+  input_text = c("I am happy.", "I am VERY happy!!", "❤", "Not sad.", "Bad.",
+    "Not bad.", "A happy sentence! And a sad one. In the same text."),
   text_column = NA,
   dict_sentiments = NA,
   dict_modifiers = NA,
   dict_negations = NA,
+  sigmoid_factor = 15,
   verbose = FALSE,
-  use_cpp11 = FALSE
+  use_cpp11 = TRUE
 )
 }
 \arguments{
@@ -24,6 +26,8 @@ tardis(
 \item{dict_modifiers}{Optional modifiers dictionary. A data.frame with two columns: `word` and `value`}
 
 \item{dict_negations}{Optional negation dictionary. A data.frame with one column: `word`}
+
+\item{sigmoid_factor}{Numeric, default 15. Factor for scaling sentence scores to -1/+1 using sigmoid function.}
 
 \item{verbose}{For debugging--should it print lots of messages to the console?}
 

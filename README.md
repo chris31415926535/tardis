@@ -21,6 +21,7 @@ constructs beyond sentiment.
 -   Handles ASCII and UTF-8 emojis :) 👍
 -   Based on simple surveyable rules
 -   Highly customizable
+-   Pretty fast, uses cpp11
 
 ## Installation
 
@@ -136,16 +137,13 @@ tardis::tardis(text) %>%
 
 ## Benchmarking
 
-The function is a bit slow right now, handling roughly 3000
-sentences/second. Most of the bottlenecks I’ve identified are with
-regular expressions using emojis and some `tidyr` functions. Here is a
-rough benchmark for the sample data in `stringr::sentences`:
+The major bottlenecks have been addressed using `cpp11` so the function
+is reasonably fast, handling roughly 13000 sentences/second using test
+data from `stringr::sentences`:
 
 <img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
 
-I’d like to get this much faster but it may require re-writing the
-bottlenecks using RCpp.
+## Known issues / Future directions
 
-## Known issues
-
--   Larger datasets (e.g. >1000 reddit comments) can run slowly.
+-   Testing and generalizing with other dictionaries/semantic
+    constructs.

@@ -35,6 +35,7 @@ TARDIS uses simple rules and dictionaries to analyze text. By
 * Handles ASCII and UTF-8 emojis :) 👍
 * Based on simple surveyable rules
 * Highly customizable
+* Pretty fast, uses cpp11
 
 ## Installation
 
@@ -108,14 +109,15 @@ tardis::tardis(text) %>%
 
 ## Benchmarking
 
-The function is a bit slow right now, handling roughly 3000 sentences/second. Most of the bottlenecks I've identified are with regular expressions using emojis and some `tidyr` functions. Here is a rough benchmark for the sample data in `stringr::sentences`:
+The major bottlenecks have been addressed using `cpp11` so the function is reasonably fast, handling roughly 13000 sentences/second using test data from `stringr::sentences`:
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
 len = numeric()
 t_median = numeric()
-iters <- c(1,10,50,100,200,500, 1000)
+iters <- c(250,500, 1000, 2500, 5000, 10000)
 
-input_text <- sample(stringr::sentences, size = 1000, replace = TRUE)
+input_text <- sample(stringr::sentences, size = 100000, replace = TRUE)
 
 for (i in 1:length(iters) ){
   iter <- iters[[i]]
@@ -130,14 +132,13 @@ benchmark %>%
   ggplot(aes(x=length,y=time)) + geom_line() + geom_point() +
   theme_minimal() +
   labs(title = "tardis::tardis() Sentences/Second",
-       subtitle = "Input data from stringr::sentences",
+       subtitle = "Input data is random samples from stringr::sentences",
        y = "Seconds",
        x = "Sentences")
 
 ```
 
-I'd like to get this much faster but it may require re-writing the bottlenecks using RCpp.
 
-## Known issues
+## Known issues / Future directions
 
-* Larger datasets (e.g. >1000 reddit comments) can run slowly.
+* Testing and generalizing with other dictionaries/semantic constructs.
