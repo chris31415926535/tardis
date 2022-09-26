@@ -16,13 +16,19 @@
 # bench::mark(zrcpp <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal, dict_sentiments))
 
 
-handle_sentence_scores <- function(result, with_dplyr = TRUE, with_dt = TRUE, sigmoid_factor = 15) {
+handle_sentence_scores <- function(result, with_dplyr = TRUE, with_dt = FALSE, sigmoid_factor = 15) {
+  # dplyr data masking
+  punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- . <- NULL
+
   #step1 now takes roughly 90% of the time in this function. can it be sped up?
+  # data.table was faster but won't work inside of the package with a clean
+  # R CMD CHECK no matter what I try
+  # https://stackoverflow.com/questions/50768717/failure-using-data-table-inside-package-function
   if (with_dt){
-    step1 <- data.table::as.data.table(result)
-    step1 <- step1[, .(sentence_sum = sum(sentiment_word, na.rm = TRUE),
-                         sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question *
-                                                                                    0.18, 0.96)), keyby = .(text_id, sentence_id)]
+    # step1 <- data.table::as.data.table(result)
+    # step1 <- step1[, .(sentence_sum = sum(sentiment_word, na.rm = TRUE),
+    #                      sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question *
+    #                                                                                 0.18, 0.96)), keyby = .(text_id, sentence_id)]
 
   } else {
 
@@ -103,6 +109,7 @@ handle_modifiers <- function(result, dict_modifiers_vec) {
 }
 
 split_text_into_sentences <- function(sentences, emoji_regex_internal, dict_sentiments){
+  punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- NULL
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
   emojis_in_dictionary <- dict_sentiments$word %>% stringr::str_subset(emoji_regex_internal)
@@ -136,7 +143,9 @@ split_text_into_sentences <- function(sentences, emoji_regex_internal, dict_sent
 }
 
 
-split_text_into_sentences_rcpp <- function(sentences, emoji_regex_internal, dict_sentiments){
+split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dict_sentiments){
+  # dplyr data masking
+  sentence <- sentences_orig <- sentences_noemojis <- sentence <- emojis <- NULLsentence <- sentences_orig <- sentences_noemojis <- sentence <- emojis <- NULL
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
   # 2022-09-25 regex string splitcontinues to be huge bottleneck, even with

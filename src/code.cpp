@@ -20,7 +20,7 @@ cpp11::strings split_string_after_punctuation_cpp11(std::string string_to_split)
       }
 
     } else if (found_punct == 1){
-      if ((string_to_split[i] != '!' & string_to_split[i] != '?' & string_to_split[i] != '.') | i == (string_chars-1)) {
+      if ((string_to_split[i] != '!' & string_to_split[i] != '?' & string_to_split[i] != '.') ) {
         out.push_back(string_to_split.substr(last_sentence_start, (i - last_sentence_start)));
         found_punct = 0;
         last_sentence_start = i;

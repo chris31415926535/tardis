@@ -10,7 +10,8 @@ tardis(
   dict_sentiments = NA,
   dict_modifiers = NA,
   dict_negations = NA,
-  verbose = FALSE
+  verbose = FALSE,
+  use_cpp11 = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ tardis(
 \item{dict_negations}{Optional negation dictionary. A data.frame with one column: `word`}
 
 \item{verbose}{For debugging--should it print lots of messages to the console?}
+
+\item{use_cpp11}{Boolean, working on cpp11 for optimization.}
 }
 \value{
 A data.frame with one row for each input text and three new columns:

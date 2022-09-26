@@ -18,14 +18,13 @@ LazyData: true
 RoxygenNote: 7.2.1
 Imports: 
     cpp11,
-    data.table,
     dplyr,
     magrittr,
+    purrr,
     stringi,
     stringr,
     tidyr
 Depends:
-    data.table,
     R (>= 2.10)
 URL: https://github.com/chris31415926535/tardis
 BugReports: https://github.com/chris31415926535/tardis/issues

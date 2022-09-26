@@ -2,6 +2,5 @@
 
 export("%>%")
 export(tardis)
-export(tardis1)
 importFrom(magrittr,"%>%")
 useDynLib(tardis, .registration = TRUE)
