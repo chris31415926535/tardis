@@ -1,17 +1,16 @@
 Package: tardis
 Type: Package
-Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
+Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment
 Version: 0.1.2
-Author: Christopher Belanger
-Maintainer: Christopher Belanger <christopher.a.belanger@gmail.com>
-Description: Analyze text with dictionaries and simple rules to measure sentiment, 
-    or roughly how happy or sad text is. Tardis handles negations, so it knows 
-    "not happy" means "sad", and it handles modifiers, so it knows that "very 
-    happy" is more happy than "happy". Tardis also supports Unicode emojis and 
-    multi-word tokens, so you can tell it that "supreme court" is neutral instead
-    of a combination of "supreme" (positive) and "court" (neutral). Tardis 
-    supports user-defined dictionaries and can be used to analyze other 
-    constructs beyond sentiment.
+Authors@R: person(given = "Christopher", 
+    family = "Belanger", 
+    email = "christopher.a.belanger@gmail.com",
+    role = c("aut", "cre", "cph"), 
+    comment = c(ORCID = "0000-0003-2070-5721"))
+Description: Measure text's sentiment with dictionaries and simple rules covering
+    negations and modifiers. User-supplied dictionaries are supported, including
+    Unicode emojis and multi-word tokens, so this package can also be used to
+    study constructs beyond sentiment.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
