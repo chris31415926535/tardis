@@ -1,7 +1,7 @@
 Package: tardis
 Type: Package
 Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: person(given = "Christopher", 
     family = "Belanger", 
     email = "christopher.a.belanger@gmail.com",
