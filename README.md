@@ -4,6 +4,11 @@
 # Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
 
 <!-- badges: start -->
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/tardis)](https://CRAN.R-project.org/package=tardis)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 TARDIS uses simple rules and dictionaries to analyze text. By default it
@@ -25,7 +30,14 @@ constructs beyond sentiment.
 
 ## Installation
 
-You can install the development version of tardis like so:
+The latest stable CRAN version can be installed as follows:
+
+``` r
+install.packages("tardis")
+```
+
+You can install the latest development version of tardis from GitHub
+like so:
 
 ``` r
 devtools::install_github("chris31415926535/tardis")
@@ -44,11 +56,11 @@ text <- c("I am happy.",
           "I am really not happy!")
 
 tardis::tardis(text) %>%
-  dplyr::select(text, sentiment_mean) %>%
+  dplyr::select(sentences_orig, sentiment_mean) %>%
   knitr::kable()
 ```
 
-| text                   | sentiment_mean |
+| sentences_orig         | sentiment_mean |
 |:-----------------------|---------------:|
 | I am happy.            |      0.5718850 |
 | I am really happy.     |      0.6695383 |
@@ -67,11 +79,11 @@ may be close to neutral overall.
 text <- "This sentence is neutral. This one is really happy! This one is absolutely miserable."
 
 tardis::tardis(text) %>%
-  dplyr::select(text, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
   knitr::kable()
 ```
 
-| text                                                                                  | sentiment_mean | sentiment_sd | sentiment_range |
+| sentences_orig                                                                        | sentiment_mean | sentiment_sd | sentiment_range |
 |:--------------------------------------------------------------------------------------|---------------:|-------------:|----------------:|
 | This sentence is neutral. This one is really happy! This one is absolutely miserable. |      0.0613416 |    0.6455055 |        1.290718 |
 
@@ -81,11 +93,11 @@ Or even passive-aggressive hostility:
 text <- "Die in a fire 😘" 
 
 tardis::tardis(text) %>%
-  dplyr::select(text, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
   knitr::kable()
 ```
 
-| text            | sentiment_mean | sentiment_sd | sentiment_range |
+| sentences_orig  | sentiment_mean | sentiment_sd | sentiment_range |
 |:----------------|---------------:|-------------:|----------------:|
 | Die in a fire 😘 |     -0.0664554 |    0.9568319 |        1.353165 |
 
@@ -141,12 +153,17 @@ The major bottlenecks have been addressed using `cpp11` so the function
 is reasonably fast, handling roughly 13000 sentences/second using test
 data from `stringr::sentences`:
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-benchmark_plot-1.png" width="100%" />
 
-## Known issues / Future directions
+## Known issues / Possible future directions
 
+-   Providing more fine-grained control over the algorithm
+    (e.g. disabling modifiers or negators, disabling the final sigmoid
+    function).
 -   Testing and generalizing with other dictionaries/semantic
     constructs.
+-   Adding a convenience function to analyze text with more than one
+    dictionary at once.
 
 ## Similar projects and packages
 

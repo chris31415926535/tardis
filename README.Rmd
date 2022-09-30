@@ -19,6 +19,8 @@ knitr::opts_chunk$set(
 # Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/tardis)](https://CRAN.R-project.org/package=tardis)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 TARDIS uses simple rules and dictionaries to analyze text. By
@@ -39,7 +41,13 @@ TARDIS uses simple rules and dictionaries to analyze text. By
 
 ## Installation
 
-You can install the development version of tardis like so:
+The latest stable CRAN version can be installed as follows:
+
+```{r, eval=FALSE}
+install.packages("tardis")
+```
+
+You can install the latest development version of tardis from GitHub like so:
 
 ``` {r, eval = FALSE}
 devtools::install_github("chris31415926535/tardis")
@@ -58,7 +66,7 @@ text <- c("I am happy.",
           "I am really not happy!")
 
 tardis::tardis(text) %>%
-  dplyr::select(text, sentiment_mean) %>%
+  dplyr::select(sentences_orig, sentiment_mean) %>%
   knitr::kable()
 ```
 
@@ -68,7 +76,7 @@ Tardis also handles blocks of text differently from other sentiment-analysis alg
 text <- "This sentence is neutral. This one is really happy! This one is absolutely miserable."
 
 tardis::tardis(text) %>%
-  dplyr::select(text, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
   knitr::kable()
 ```
 
@@ -78,7 +86,7 @@ Or even passive-aggressive hostility:
 text <- "Die in a fire 😘" 
 
 tardis::tardis(text) %>%
-  dplyr::select(text, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
   knitr::kable()
 ```
 
@@ -111,7 +119,7 @@ tardis::tardis(text) %>%
 
 The major bottlenecks have been addressed using `cpp11` so the function is reasonably fast, handling roughly 13000 sentences/second using test data from `stringr::sentences`:
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+```{r benchmark_plot, echo = FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
 len = numeric()
 t_median = numeric()
@@ -139,9 +147,11 @@ benchmark %>%
 ```
 
 
-## Known issues / Future directions
+## Known issues / Possible future directions
 
+* Providing more fine-grained control over the algorithm (e.g. disabling modifiers or negators, disabling the final sigmoid function).
 * Testing and generalizing with other dictionaries/semantic constructs.
+* Adding a convenience function to analyze text with more than one dictionary at once.
 
 ## Similar projects and packages
 
