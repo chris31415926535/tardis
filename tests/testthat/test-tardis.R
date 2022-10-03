@@ -38,7 +38,7 @@ testthat::test_that("Cpp11 function to split sentences works properly", {
                          c("HI!!!!", " you??!!!"," wow"))
   testthat::expect_equal(split_text_into_sentences_cpp11(test3 , temp_dict_emojis, temp_dict_sentiments )$sentence,
                          c("hi..", " there...??", " you!!!!!"))
-  })
+})
 
 
 testthat::test_that("Cpp11 function to take pairwise nonzero value from two vectors", {
@@ -46,3 +46,50 @@ testthat::test_that("Cpp11 function to take pairwise nonzero value from two vect
                                                  c(0,2,2)),
                          c(1,2,1))
 })
+
+
+testthat::test_that("Custom dictionaries with no emojis work properly", {
+  custom_dict <- dplyr::tribble(~word, ~sentiment,
+                                "happy", 5,
+                                "sad", -5)
+  testthat::expect_gt(tardis("happy", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_equal(tardis("jumpin' jehosephat")$sentiment_mean, 0)
+  testthat::expect_lt(tardis("sad", dict_sentiments = custom_dict)$sentiment_mean, 0)
+
+})
+
+testthat::test_that("Custom dictionaries that are ONLY emojis work properly", {
+  custom_dict <- dplyr::tribble(~word, ~sentiment,
+                                "❤️", 5,
+                                "😭", -5)
+  testthat::expect_gt(tardis("❤️", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_equal(tardis("jumpin' jehosephat")$sentiment_mean, 0)
+  testthat::expect_lt(tardis("😭", dict_sentiments = custom_dict)$sentiment_mean, 0)
+
+})
+
+testthat::test_that("Custom dictionaries with text and emojis work properly", {
+  custom_dict <- dplyr::tribble(~word, ~sentiment,
+                                "❤️", 5,
+                                "sadness", -5,
+                                ":D", 5)
+  testthat::expect_gt(tardis("❤️", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_gt(tardis("time for lunch :D", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_equal(tardis("jumpin' jehosephat")$sentiment_mean, 0)
+  testthat::expect_lt(tardis("sadness", dict_sentiments = custom_dict)$sentiment_mean, 0)
+
+})
+
+testthat::test_that("Custom dictionaries with multi-word tokens work properly",{
+  custom_dict <- dict_tardis_sentiment %>%
+    dplyr::add_row(word = "supreme court", sentiment = 0) %>%
+    dplyr::add_row(word = "happy sad", sentiment = 0)
+
+  testthat::expect_gt(tardis("supreme", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_equal(tardis("supreme court", dict_sentiments = custom_dict)$sentiment_mean, 0)
+
+  testthat::expect_gt(tardis("happy", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_equal(tardis("happy sad", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_lt(tardis("sad", dict_sentiments = custom_dict)$sentiment_mean, 0)
+
+  })

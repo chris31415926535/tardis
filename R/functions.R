@@ -56,7 +56,7 @@ handle_sentence_scores <- function(result, with_dplyr = TRUE, with_dt = FALSE, s
     result_sentences <- step1
   }
 
- # result_sentences <- dplyr::as_tibble(result_sentences)
+  # result_sentences <- dplyr::as_tibble(result_sentences)
 
   return(result_sentences)
 }
@@ -161,11 +161,19 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   # unnesting is the big time suck
   sentences$text_id <- 1:nrow(sentences)
 
-  step1 <- sentences %>%
-    dplyr::mutate(emojis = stringr::str_extract_all(sentences_orig, emoji_regex))
+  # only extract emojis if there are any in the dictionary. otherwise create a
+  # tibble with empty column for emojis
+  if (emoji_regex != ""){
+    step1 <- sentences %>%
+      dplyr::mutate(emojis = stringr::str_extract_all(sentences_orig, emoji_regex))
 
-  step2 <- step1 %>%
-    dplyr::mutate(sentences_noemojis = stringr::str_remove_all(sentences_orig, emoji_regex))
+    step2 <- step1 %>%
+      dplyr::mutate(sentences_noemojis = stringr::str_remove_all(sentences_orig, emoji_regex))
+
+  } else {
+    step2 <- sentences %>%
+      dplyr::mutate(sentences_noemojis = sentences_orig, emojis = list(rep(character(length = 0L), times = nrow(sentences))))
+  }
 
   step3cpp11 <- step2 %>%
     #dplyr::mutate(sentence = stringi::stri_split_regex(str = sentences_noemojis, pattern = regex_pattern, simplify = FALSE, omit_empty = TRUE))
@@ -184,6 +192,7 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   # assign unique sentence ids
   result$sentence_id <- 1:nrow(result)
 
+  #print(result)
   return(result)
 }
 
