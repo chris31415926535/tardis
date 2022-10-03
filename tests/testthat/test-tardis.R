@@ -63,7 +63,7 @@ testthat::test_that("Custom dictionaries that are ONLY emojis work properly", {
                                 "❤️", 5,
                                 "😭", -5)
   testthat::expect_gt(tardis("❤️", dict_sentiments = custom_dict)$sentiment_mean, 0)
-  testthat::expect_equal(tardis("jumpin' jehosephat")$sentiment_mean, 0)
+  testthat::expect_equal(tardis("jumpin' anacondas")$sentiment_mean, 0)
   testthat::expect_lt(tardis("😭", dict_sentiments = custom_dict)$sentiment_mean, 0)
 
 })
@@ -83,8 +83,11 @@ testthat::test_that("Custom dictionaries with text and emojis work properly", {
 testthat::test_that("Custom dictionaries with multi-word tokens work properly",{
   custom_dict <- dict_tardis_sentiment %>%
     dplyr::add_row(word = "supreme court", sentiment = 0) %>%
-    dplyr::add_row(word = "happy sad", sentiment = 0)
+    dplyr::add_row(word = "happy sad", sentiment = 0) %>%
+    dplyr::add_row(word = "oh dear", sentiment = -3)
 
+
+  # if multi-word tokens  have sentiment-bearing sub-components, the subcomponents still work fine
   testthat::expect_gt(tardis("supreme", dict_sentiments = custom_dict)$sentiment_mean, 0)
   testthat::expect_equal(tardis("supreme court", dict_sentiments = custom_dict)$sentiment_mean, 0)
 
@@ -92,4 +95,9 @@ testthat::test_that("Custom dictionaries with multi-word tokens work properly",{
   testthat::expect_equal(tardis("happy sad", dict_sentiments = custom_dict)$sentiment_mean, 0)
   testthat::expect_lt(tardis("sad", dict_sentiments = custom_dict)$sentiment_mean, 0)
 
+  # multi-word tokens work when next to punctuation
+  testthat::expect_lt(tardis("oh dear", dict_sentiments = custom_dict)$sentiment_mean, 0)
+  testthat::expect_lt(tardis("oh dear!", dict_sentiments = custom_dict)$sentiment_mean,
+                      tardis("oh dear", dict_sentiments = custom_dict)$sentiment_mean)
+  testthat::expect_lt(tardis("oh dear!", dict_sentiments = custom_dict)$sentiment_mean, 0)
   })
