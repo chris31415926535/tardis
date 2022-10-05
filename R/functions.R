@@ -16,7 +16,7 @@
 # bench::mark(zrcpp <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal, dict_sentiments))
 
 
-handle_sentence_scores <- function(result, with_dplyr = TRUE, with_dt = FALSE, sigmoid_factor = 15) {
+handle_sentence_scores <- function(result, sigmoid_factor = 15) {
   # dplyr data masking
   punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- . <- NULL
 
@@ -24,41 +24,28 @@ handle_sentence_scores <- function(result, with_dplyr = TRUE, with_dt = FALSE, s
   # data.table was faster but won't work inside of the package with a clean
   # R CMD CHECK no matter what I try
   # https://stackoverflow.com/questions/50768717/failure-using-data-table-inside-package-function
-  if (with_dt){
-    # step1 <- data.table::as.data.table(result)
-    # step1 <- step1[, .(sentence_sum = sum(sentiment_word, na.rm = TRUE),
-    #                      sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question *
-    #                                                                                 0.18, 0.96)), keyby = .(text_id, sentence_id)]
 
-  } else {
+  step1 <- result %>%
+    dplyr::group_by(text_id, sentence_id) %>%
+    dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
+                     sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question * 0.18, 0.96)
+                     #,sentence_swing = max(sentiment_word) - min(sentiment_word)
+                     , .groups = "drop_last"
+    )
 
-    step1 <- result %>%
-      dplyr::group_by(text_id, sentence_id) %>%
-      dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
-                       sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question * 0.18, 0.96)
-                       #,sentence_swing = max(sentiment_word) - min(sentiment_word)
-                       , .groups = "drop_last"
-      )
-  }
 
   # vectorized add punctuation in the signed direction, only if not zero. (otherwise subtracted when it shouldn't)
   # much faster to use primitive sign() function than comparing abs() values
   # about twice as fast without dplyr here
-  if (with_dplyr) {
-    result_sentences <- step1 %>%
-      dplyr::mutate(sentence_score = dplyr::if_else(abs(sentence_sum) > 0, sentence_sum + sentence_punct* (sentence_sum/abs(sentence_sum)), sentence_sum)) %>%
-      dplyr::mutate(sentence_score = sentence_score / sqrt((sentence_score * sentence_score) + sigmoid_factor)) %>%
-      dplyr::select(-sentence_sum, -sentence_punct)
-  } else {
     step1$sentence_score <- step1$sentence_sum + sign(step1$sentence_sum) * step1$sentence_punct
-    step1$sentence_score <- step1$sentence_score / sqrt((step1$sentence_score^2) + sigmoid_factor)
+
+    if (!is.na(sigmoid_factor)){
+      step1$sentence_score <- step1$sentence_score / sqrt((step1$sentence_score^2) + sigmoid_factor)
+    }
+
     step1$sentence_sum <- step1$sentence_punct <- NULL
-    result_sentences <- step1
-  }
 
-  # result_sentences <- dplyr::as_tibble(result_sentences)
-
-  return(result_sentences)
+  return(step1)
 }
 
 handle_capitalizations <- function(result, allcaps_factor){

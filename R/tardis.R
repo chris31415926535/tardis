@@ -29,7 +29,10 @@
 #' @param dict_sentiments Optional sentiment dictionary. A data.frame with two columns: `word` and `value`
 #' @param dict_modifiers Optional modifiers dictionary. A data.frame with two columns: `word` and `value`
 #' @param dict_negations Optional negation dictionary. A data.frame with one column: `word`
-#' @param sigmoid_factor Numeric, default 15. Factor for scaling sentence scores to -1/+1 using sigmoid function.
+#' @param sigmoid_factor Numeric, default 15. Factor for scaling sentence scores to -1/+1
+#'                       using a sigmoid function. Set to NA to disable the sigmoid function
+#'                       and just return sums of scores, adjusted by any applicable
+#'                       negators, modifiers, or punctuation/caps effects.
 #' @param verbose For debugging--should it print lots of messages to the console?
 #' @param use_cpp11 Boolean, working on cpp11 for optimization.
 #'
@@ -215,9 +218,9 @@ tardis <- function(
   ########################-
   # SENTENCE SCORES ----
   # get sentence-level scores
-  # This is a bottleneck, but using base R and data.table internally helped
+  # This is a bottleneck, but using base R helped
 
-  result_sentences <- handle_sentence_scores(result, with_dplyr = FALSE, with_dt = FALSE, sigmoid_factor = sigmoid_factor)
+  result_sentences <- handle_sentence_scores(result, sigmoid_factor = sigmoid_factor)
 
 
   #################-
