@@ -34,7 +34,6 @@
 #'                       and just return sums of scores, adjusted by any applicable
 #'                       negators, modifiers, or punctuation/caps effects.
 #' @param verbose For debugging--should it print lots of messages to the console?
-#' @param use_cpp11 Boolean, working on cpp11 for optimization.
 #'
 #' @return A data.frame with one row for each input text and three new columns:
 #'         `sentiment_mean`: the average sentiment for each sentence in each text.
@@ -49,9 +48,6 @@ tardis <- function(
   dict_negations = NA,
   sigmoid_factor = 15,
   verbose = FALSE
-  , use_cpp11 = TRUE
-
-
 ) {
   # for dplyr data masking
   sentences_orig <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
@@ -135,8 +131,7 @@ tardis <- function(
   #################### -
   # SPLIT TEXT INTO SENTENCES ----
 
-  if (!use_cpp11)  result <- split_text_into_sentences(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
-  if (use_cpp11)  result <- split_text_into_sentences_cpp11(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
+  result <- split_text_into_sentences_cpp11(sentences, emoji_regex_internal = emoji_regex_internal, dict_sentiments = dict_sentiments)
 
   ######################## -
   # SENTENCE PUNCTUATION  ----
@@ -195,18 +190,9 @@ tardis <- function(
   result$sentiment1[is.na(result$sentiment1)] <- 0
   result$sentiment2[is.na(result$sentiment2)] <- 0
 
-  # this purrr::map is kind of slow
+  # original purrr::map was kind of slow
   # rcpp function brings ~ 100ms down to ~ 18
-  if (use_cpp11) result$sentiment <- get_nonzero_value_cpp11(result$sentiment1, result$sentiment2)
-  if (!use_cpp11) {
-    result$sentiment <- purrr::map2_dbl(result$sentiment1, result$sentiment2, function(x,y) {
-      if (x == y) output <- x
-      if (x ==0 & y != 0) output <- y
-      if (x !=0 & y == 0) output <- x
-      if (x !=0 & y != 0 & x != y) output <- x # should we issue a warning here?
-      return(output)
-    })
-  }
+  result$sentiment <- get_nonzero_value_cpp11(result$sentiment1, result$sentiment2)
 
   # process word-level sentiments
   # here we apply all the vectors we've built so far: applying to the sentiment-bearing
