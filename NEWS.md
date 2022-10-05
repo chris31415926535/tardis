@@ -1,6 +1,8 @@
 # tardis 0.1.4
 
 * Bugfix: multi-word tokens recognized properly when next to punctuation.
+* Sigmoid function is now optional, enabling simpler word counting.
+* Internal code cleanup.
 
 # tardis 0.1.3
 

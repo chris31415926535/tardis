@@ -1,21 +1,5 @@
 #' @useDynLib tardis, .registration = TRUE
 
-
-
-# reddit_data <- pushshiftR::get_reddit_comments(q="corgis", size = 500)
-# dict_sentiments <- tardis::dict_tardis_sentiment
-#
-# sentences <- dplyr::tibble(sentences_orig = reddit_data$body)
-#
-# result1 <- split_text_into_sentences(sentences, emoji_regex_internal, dict_sentiments)
-# resultrcpp <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal, dict_sentiments)
-# split_text_into_sentences_rcpp(sentences, emoji_regex_internal, dict_sentiments)
-# test <- split_text_into_sentences2(sentences, emoji_regex_internal, dict_sentiments)
-#
-# bench::mark(z <- split_text_into_sentences(sentences, emoji_regex_internal, dict_sentiments))
-# bench::mark(zrcpp <- split_text_into_sentences_rcpp(sentences, emoji_regex_internal, dict_sentiments))
-
-
 handle_sentence_scores <- function(result, sigmoid_factor = 15) {
   # dplyr data masking
   punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- . <- NULL
@@ -183,62 +167,31 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   return(result)
 }
 
-#
-# Rcpp::cppFunction('Rcpp::CharacterVector rcpp_foo() {
-#   Rcpp::String let1("ف");
-#   Rcpp::String let2("خ");
-#
-#   Rcpp::CharacterVector out;
-#   out.push_back(let1);
-#   out.push_back(let2);
-#
-#   return out;
-# }')
-#
-# #
-# Rcpp::cppFunction("Rcpp::CharacterVector split_string_after_punctuation(std::string string_to_split) {
-#   //Rcpp::String let1('ف');
-#   //Rcpp::String let2('خ');
-#
-#   Rcpp::CharacterVector out;
-#
-#   int string_chars = string_to_split.length();
-#
-#   int found_punct = 0;
-#   int last_sentence_start = 0;
-#
-#   for (int i = 0; i < string_chars; i++){
-#   //Rcout << i << '\n';
-#     if (found_punct == 0){
-#
-#        if(string_to_split[i] == '!' | string_to_split[i] == '?') {
-#        Rcout << 'found punct at ' << i;
-#           found_punct = 1;
-#        }
-#
-#     } else if (found_punct == 1){
-#        if ((string_to_split[i] != '!' & string_to_split[i] != '?') | i == (string_chars-1)) {
-#           out.push_back(string_to_split.substr(last_sentence_start, i));
-#           found_punct = 0;
-#           last_sentence_start = i; // FIXME this will double-count some things
-#
-#        }
-#
-#     } // end of found_punct == 1
-#
-#
-#   } // end for loop
-#   //out.push_back(let1);
-#   //out.push_back(let2);
-#
-#   return out;
-# }")
-#
-# #
-#
-# bench::mark(rcpp_foo())
-#
-# split_string_after_punctuation("asd!! safd !")
-#
-# bench::mark(stringr::str_extract_all(sentences$sentences_orig, emoji_regex))
-# bench::mark(stringr::str_remove_all(sentences$sentences_orig, emoji_regex))
+
+
+# custom function to lag a vector based on the values in an index vector
+# essentially a custom version of dplyr::group() %>% dplyr::lag() but MUCH faster.
+# vector_index is a vector of monotonically increasing integers indicating groups
+# vec_to_lag is the vector to be lagged
+# NOTE this seems 50x faster than the dplyr functions, which were the bottleneck
+# this could be easily converted to Rcpp if necessary / worth it
+lag1_indexed_vector <- function(vector_index, vec_to_lag) {
+
+  vec_length <- length(vector_index)
+  vec_lagged1 <- rep(0, vec_length)
+  last_id <- 0
+
+  for (i in 1:vec_length){
+    #message(i)
+    # new sentence id
+    if ((vector_index[[i]] != last_id)  ) {
+      last_id <- vector_index[[i]]
+      vec_lagged1[[i]] <- 0
+    } else {
+      vec_lagged1[[i]] <- vec_to_lag[[i-1]]
+    }
+
+  }
+
+  return (vec_lagged1)
+}

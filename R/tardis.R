@@ -221,40 +221,8 @@ tardis <- function(
   result_text <- dplyr::as_tibble(result_text)
 
   # add back original text, remove text_id column
-  #result_text[text_column] <- original_input
   result_text$text_id <- NULL
 
-  # reorder to put text first
-  #result_text <- result_text[,c(4,1,2,3)]
-
   dplyr::bind_cols(final_output, result_text)
-  #result_text
-}
 
-
-# custom function to lag a vector based on the values in an index vector
-# essentially a custom version of dplyr::group() %>% dplyr::lag() but MUCH faster.
-# vector_index is a vector of monotonically increasing integers indicating groups
-# vec_to_lag is the vector to be lagged
-# NOTE this seems 50x faster than the dplyr functions, which were the bottleneck
-# this could be easily converted to Rcpp if necessary / worth it
-lag1_indexed_vector <- function(vector_index, vec_to_lag) {
-
-  vec_length <- length(vector_index)
-  vec_lagged1 <- rep(0, vec_length)
-  last_id <- 0
-
-  for (i in 1:vec_length){
-    #message(i)
-    # new sentence id
-    if ((vector_index[[i]] != last_id)  ) {
-      last_id <- vector_index[[i]]
-      vec_lagged1[[i]] <- 0
-    } else {
-      vec_lagged1[[i]] <- vec_to_lag[[i-1]]
-    }
-
-  }
-
-  return (vec_lagged1)
 }
