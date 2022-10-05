@@ -33,6 +33,12 @@
 #'                       using a sigmoid function. Set to NA to disable the sigmoid function
 #'                       and just return sums of scores, adjusted by any applicable
 #'                       negators, modifiers, or punctuation/caps effects.
+#' @param negation_factor Numeric, default 0.75. Multiplier for damping effects of
+#'                        sentiment-bearing terms after negations. Stacks multiplicatively.
+#'                        Should probably be less than 1.
+#' @param allcaps_factor Numeric, default 1.25. Multiplier for scaling effects of
+#'                       of sentiment-bearing terms in ALL CAPS. Should probably
+#'                       be more than 1, to increase effects.
 #' @param verbose For debugging--should it print lots of messages to the console?
 #'
 #' @return A data.frame with one row for each input text and three new columns:
@@ -47,19 +53,16 @@ tardis <- function(
   dict_modifiers = NA,
   dict_negations = NA,
   sigmoid_factor = 15,
+  negation_factor = 0.75,
+  allcaps_factor = 1.25,
   verbose = FALSE
 ) {
   # for dplyr data masking
   sentences_orig <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
 
-  #verbose <- TRUE
-
-  #if (verbose) warning("Still need to support ascii emojis like :) and :(")
-
   # multiplicative scale factors for negations and all caps words
-  negation_factor <- 0.75
-  allcaps_factor  <- 0.25 # this has 1 added to it before multiplying! anything over 0 represents an increase, anything below 1 represents a decrease
-
+  # allcaps_factor needs 1 subtracted here because of how it's treated later
+  allcaps_factor <- allcaps_factor - 1
 
   ################################.
   # INPUT TEXT SETUP ----

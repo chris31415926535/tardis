@@ -2,10 +2,13 @@
 
 * Bugfix: multi-word tokens recognized properly when next to punctuation.
 * Sigmoid function is now optional, enabling simpler word counting.
+* New parameter: negation_factor, multiplier for damping sentiment after negation.
+* New parameter: allcaps_factor, multiplier for ALL CAPS sentiment increases.
 * Internal code cleanup.
 
 # tardis 0.1.3
 
+* Updated CRAN release.
 * Fix cpp code to use logical operators, not bitwise operators, for clang14 build.
 
 # tardis 0.1.2
