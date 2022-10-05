@@ -1,3 +1,7 @@
+# tardis 0.1.4
+
+* Bugfix: multi-word tokens recognized properly when next to punctuation.
+
 # tardis 0.1.3
 
 * Fix cpp code to use logical operators, not bitwise operators, for clang14 build.

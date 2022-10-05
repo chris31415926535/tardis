@@ -103,7 +103,7 @@ tardis <- function(
     if (verbose) message ("Found multi-word ngrams in sentiment dictionary.")
     for (i in 1:length(multi_word_indices)) {
       old_word <- dict_sentiments$word[[multi_word_indices[[i]]]]
-      new_word <- gsub(x = old_word, pattern = " ", replacement = "X", fixed = TRUE)
+      new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
 
       dict_sentiments$word[[multi_word_indices[[i]]]] <- new_word
       sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
