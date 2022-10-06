@@ -21,13 +21,13 @@ handle_sentence_scores <- function(result, sigmoid_factor = 15) {
   # vectorized add punctuation in the signed direction, only if not zero. (otherwise subtracted when it shouldn't)
   # much faster to use primitive sign() function than comparing abs() values
   # about twice as fast without dplyr here
-    step1$sentence_score <- step1$sentence_sum + sign(step1$sentence_sum) * step1$sentence_punct
+  step1$sentence_score <- step1$sentence_sum + sign(step1$sentence_sum) * step1$sentence_punct
 
-    if (!is.na(sigmoid_factor)){
-      step1$sentence_score <- step1$sentence_score / sqrt((step1$sentence_score^2) + sigmoid_factor)
-    }
+  if (!is.na(sigmoid_factor)){
+    step1$sentence_score <- step1$sentence_score / sqrt((step1$sentence_score^2) + sigmoid_factor)
+  }
 
-    step1$sentence_sum <- step1$sentence_punct <- NULL
+  step1$sentence_sum <- step1$sentence_punct <- NULL
 
   return(step1)
 }
@@ -42,40 +42,52 @@ handle_capitalizations <- function(result, allcaps_factor){
   return(result)
 }
 
-handle_negations <- function(result, dict_negations_vec, negation_factor){
-  result$negation <- dict_negations_vec[result$word]
-  result$negation <- (dplyr::if_else(is.na(result$negation ), 0, result$negation))
+handle_negations <- function(result, dict_negations_vec, negation_factor, use_negations){
 
-  # get lagged negations
-  result$negation1 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation)
-  result$negation2 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation1)
-  result$negation3 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation2)
+  if (use_negations){
+    result$negation <- dict_negations_vec[result$word]
+    result$negation <- (dplyr::if_else(is.na(result$negation ), 0, result$negation))
 
-  # here we apply the negation factor, doing the scaling and the -1 powers separately so we can have fractional powers
-  # if there are ALL CAPS negations. not presently implemented
-  # negations
-  result$negations <- (negation_factor)^(result$negation1 + result$negation2 + result$negation3)*(-1)^floor(result$negation1 + result$negation2 + result$negation3)
+    # get lagged negations
+    result$negation1 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation)
+    result$negation2 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation1)
+    result$negation3 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$negation2)
 
-  result$negation <- result$negation1 <- result$negation2 <- result$negation3 <- NULL
+    # here we apply the negation factor, doing the scaling and the -1 powers separately so we can have fractional powers
+    # if there are ALL CAPS negations. not presently implemented
+    # negations
+    result$negations <- (negation_factor)^(result$negation1 + result$negation2 + result$negation3)*(-1)^floor(result$negation1 + result$negation2 + result$negation3)
 
+    result$negation <- result$negation1 <- result$negation2 <- result$negation3 <- NULL
+  } else {
+    result$negations <- 1
+  }
   return(result)
 }
 
-handle_modifiers <- function(result, dict_modifiers_vec) {
-  result$modifier <- dict_modifiers_vec[result$word]
-  result$modifier <- (dplyr::if_else(is.na(result$modifier ), 0, result$modifier))
+handle_modifiers <- function(result, dict_modifiers_vec, use_modifiers) {
 
-  result$modifier_value <- result$modifier * result$allcaps
+  # if we're using modifiers, do the math.
+  # otherwise, set the multiplicative factors to 1--i.e. no change.
+  if (use_modifiers){
+    result$modifier <- dict_modifiers_vec[result$word]
+    result$modifier <- (dplyr::if_else(is.na(result$modifier ), 0, result$modifier))
 
-  # get laggd modifiers
-  result$modifier1 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier)
-  result$modifier2 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier1)
-  result$modifier3 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier2)
+    result$modifier_value <- result$modifier * result$allcaps
 
-  result$modifiers <- 1 + (result$modifier1 + 0.95 * result$modifier2 + 0.9 * result$modifier3)
+    # get laggd modifiers
+    result$modifier1 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier)
+    result$modifier2 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier1)
+    result$modifier3 <- lag1_indexed_vector(vector_index = result$sentence_id, vec_to_lag = result$modifier2)
 
-  result$modifier <- result$modifier1 <- result$modifier2 <- result$modifier3 <- NULL
+    result$modifiers <- 1 + (result$modifier1 + 0.95 * result$modifier2 + 0.9 * result$modifier3)
 
+    result$modifier <- result$modifier1 <- result$modifier2 <- result$modifier3 <- NULL
+  } else {
+
+    result$modifiers <- 1
+
+  }
   return(result)
 }
 

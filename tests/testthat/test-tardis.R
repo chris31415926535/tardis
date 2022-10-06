@@ -101,3 +101,40 @@ testthat::test_that("Custom dictionaries with multi-word tokens work properly",{
                       tardis("oh dear", dict_sentiments = custom_dict)$sentiment_mean)
   testthat::expect_lt(tardis("oh dear!", dict_sentiments = custom_dict)$sentiment_mean, 0)
   })
+
+
+testthat::test_that("Modifiers work as expected", {
+  # modifiers amplify direction
+  testthat::expect_gt(tardis("very happy")$sentiment_mean, tardis("happy")$sentiment_mean)
+  testthat::expect_lt(tardis("very sad")$sentiment_mean, tardis("sad")$sentiment_mean)
+
+  # modifiers work up to 3 steps back but no more
+  testthat::expect_gt(tardis("very very happy")$sentiment_mean, tardis("very happy")$sentiment_mean)
+  testthat::expect_gt(tardis("very very very happy")$sentiment_mean, tardis("very very happy")$sentiment_mean)
+  testthat::expect_equal(tardis("very very very very happy")$sentiment_mean, tardis("very very very happy")$sentiment_mean)
+
+  # modifiers can be disabled
+  testthat::expect_equal(tardis("very happy", dict_modifiers = "none")$sentiment_mean, tardis("happy")$sentiment_mean)
+  testthat::expect_equal(tardis("very sad", dict_modifiers = "none")$sentiment_mean, tardis("sad")$sentiment_mean)
+})
+
+testthat::test_that("Negations work as expected",{
+
+  # negations flip direction
+  testthat::expect_lt(tardis("not happy")$sentiment_mean, tardis("happy")$sentiment_mean)
+  testthat::expect_gt(tardis("not sad")$sentiment_mean, tardis("sad")$sentiment_mean)
+
+  # negations damp effect sizes
+  testthat::expect_lt(abs(tardis("not happy")$sentiment_mean), abs(tardis("happy")$sentiment_mean))
+  testthat::expect_lt(abs(tardis("not sad")$sentiment_mean), abs(tardis("sad")$sentiment_mean))
+
+  # negations work up to 3 steps back but no more
+  testthat::expect_lt(abs(tardis("not not happy")$sentiment_mean), abs(tardis("not happy")$sentiment_mean))
+  testthat::expect_lt(abs(tardis("not not not happy")$sentiment_mean), abs(tardis("not not happy")$sentiment_mean))
+  testthat::expect_equal(tardis("not not not not happy")$sentiment_mean, tardis("not not not happy")$sentiment_mean)
+
+  # negations can be disabled
+  testthat::expect_equal(tardis("not happy", dict_negations = "none")$sentiment_mean, tardis("happy")$sentiment_mean)
+  testthat::expect_equal(tardis("not sad", dict_negations = "none")$sentiment_mean, tardis("sad")$sentiment_mean)
+
+})

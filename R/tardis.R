@@ -26,9 +26,12 @@
 #'
 #' @param input_text Text to analyze, either a character vector or a data.frame with a column of text.
 #' @param text_column If using data.frame input, the name of the column of text to analyze.
-#' @param dict_sentiments Optional sentiment dictionary. A data.frame with two columns: `word` and `value`
-#' @param dict_modifiers Optional modifiers dictionary. A data.frame with two columns: `word` and `value`
-#' @param dict_negations Optional negation dictionary. A data.frame with one column: `word`
+#' @param dict_sentiments Optional sentiment dictionary, defaults to internal tardis dictionary.
+#'                        A data.frame with two columns: `word` and `value`.
+#' @param dict_modifiers Optional modifiers dictionary, or "none" to disable modifiers.
+#'                       Defaults to internal tardis dictionary. A data.frame with two columns: `word` and `value`.
+#' @param dict_negations Optional negation dictionary, or "none" to disable negations.
+#'                       Defaults to internal tardis dictionary. A data.frame with one column: `word`.
 #' @param sigmoid_factor Numeric, default 15. Factor for scaling sentence scores to -1/+1
 #'                       using a sigmoid function. Set to NA to disable the sigmoid function
 #'                       and just return sums of scores, adjusted by any applicable
@@ -118,18 +121,38 @@ tardis <- function(
   names(dict_sentiments_vec) <- dict_sentiments$word
 
   # Modifiers
+
+  # if no dictionary supplied by user, use default dictionary
   if (all(is.na(dict_modifiers))){
     dict_modifiers <- tardis::dict_vader_modifiers
   }
-  dict_modifiers_vec <- dict_modifiers$booster_value
-  names(dict_modifiers_vec) <- dict_modifiers$word
+
+  # if user said "none", we're not using modifiers. otherwise set up vector dictionary
+  if (all(dict_modifiers == "none")) {
+    if (verbose) message ("Disabling modifiers.")
+    use_modifiers <- FALSE
+  } else {
+    use_modifiers <- TRUE
+    dict_modifiers_vec <- dict_modifiers$booster_value
+    names(dict_modifiers_vec) <- dict_modifiers$word
+  }
 
   # Negations
+
+  # if no dictionary supplied by user, use default dictionary
   if (all(is.na(dict_negations))){
     dict_negations <- tardis::dict_vader_negations
   }
-  dict_negations_vec <- rep(1, nrow(dict_negations))
-  names(dict_negations_vec) <- dict_negations$word
+
+  # if user said "none", we're not using negators. otherwise set up vector dictionary
+  if (all(dict_negations == "none")) {
+    if (verbose) message ("Disabling negations.")
+    use_negations <- FALSE
+  } else {
+    use_negations <- TRUE
+    dict_negations_vec <- rep(1, nrow(dict_negations))
+    names(dict_negations_vec) <- dict_negations$word
+  }
 
   #################### -
   # SPLIT TEXT INTO SENTENCES ----
@@ -175,11 +198,11 @@ tardis <- function(
 
   # find all negations
   # much faster than the capitalization stuff
-  result <- handle_negations(result, dict_negations_vec, negation_factor)
+  result <- handle_negations(result, dict_negations_vec, negation_factor, use_negations)
 
   ##########################-
   # MODIFIERS ----
-  result <- handle_modifiers(result, dict_modifiers_vec)
+  result <- handle_modifiers(result, dict_modifiers_vec, use_modifiers)
 
 
   ########################-
