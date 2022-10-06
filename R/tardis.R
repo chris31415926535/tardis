@@ -42,9 +42,10 @@
 #' @param allcaps_factor Numeric, default 1.25. Multiplier for scaling effects of
 #'                       of sentiment-bearing terms in ALL CAPS. Should probably
 #'                       be more than 1, to increase effects.
+#' @param use_punctuation Boolean, default TRUE. Should we consider sentence-level punctuation?
 #' @param verbose For debugging--should it print lots of messages to the console?
 #'
-#' @return A data.frame with one row for each input text and three new columns:
+#' @return A `tbl_df` with one row for each input text and three new columns:
 #'         `sentiment_mean`: the average sentiment for each sentence in each text.
 #'         `sentiment_sd`: the standard deviation of sentence sentiments for each text.
 #'         `sentiment_range`: the range of sentence sentiments for each text.
@@ -58,6 +59,7 @@ tardis <- function(
   sigmoid_factor = 15,
   negation_factor = 0.75,
   allcaps_factor = 1.25,
+  use_punctuation = TRUE,
   verbose = FALSE
 ) {
   # for dplyr data masking
@@ -163,9 +165,13 @@ tardis <- function(
   # SENTENCE PUNCTUATION  ----
 
   # count instances of exclamation points and double question marks
-  result$punct_exclamation <- stringi::stri_count_fixed(result$sentence, pattern = "!")
-  result$punct_question <- stringi::stri_count_fixed(result$sentence, pattern = "?")
-
+  # or set them to zero if we're not considering punctuation
+  if (use_punctuation){
+    result$punct_exclamation <- stringi::stri_count_fixed(result$sentence, pattern = "!")
+    result$punct_question <- stringi::stri_count_fixed(result$sentence, pattern = "?")
+  } else {
+    result$punct_exclamation <- result$punct_question <- 0
+  }
   ######################## -
   # SPLIT INTO WORDS ----
   # NB need stri_enc_tooutf8 if using rcpp

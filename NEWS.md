@@ -5,6 +5,8 @@
 * New parameter: negation_factor, multiplier for damping sentiment after negation.
 * New parameter: allcaps_factor, multiplier for ALL CAPS sentiment increases.
 * Added parameters and tests to enable disabling modifiers and negations.
+* Added parameter to disable punctuation analysis.
+* Added unit tests for all new features.
 * Internal code cleanup.
 
 # tardis 0.1.3

@@ -21,6 +21,12 @@ testthat::test_that("Punctuation amplifies sentiment",{
   testthat::expect_lt(tardis("sad!")$sentiment_mean , tardis("sad")$sentiment_mean)
 })
 
+
+testthat::test_that("Punctuation can be disabled",{
+  testthat::expect_equal(tardis("happy!", use_punctuation = FALSE)$sentiment_mean , tardis("happy")$sentiment_mean)
+  testthat::expect_equal(tardis("sad!!?!?!", use_punctuation = FALSE)$sentiment_mean , tardis("sad")$sentiment_mean)
+})
+
 testthat::test_that("Punctuation and capitalization together amplifies sentiment",{
   testthat::expect_gt(tardis("HAPPY!")$sentiment_mean , tardis("happy!")$sentiment_mean)
   testthat::expect_lt(tardis("SAD!")$sentiment_mean , tardis("sad!")$sentiment_mean)
