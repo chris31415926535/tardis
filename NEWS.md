@@ -6,6 +6,7 @@
 * New parameter: allcaps_factor, multiplier for ALL CAPS sentiment increases.
 * Added parameters and tests to enable disabling modifiers and negations.
 * Added parameter to disable punctuation analysis.
+* Added convenience parameter simple_count to count word presences.
 * Added unit tests for all new features.
 * Internal code cleanup.
 

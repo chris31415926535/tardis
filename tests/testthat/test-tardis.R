@@ -144,3 +144,10 @@ testthat::test_that("Negations work as expected",{
   testthat::expect_equal(tardis("not sad", dict_negations = "none")$sentiment_mean, tardis("sad")$sentiment_mean)
 
 })
+
+
+testthat::test_that("Parameter simple_count works as expected", {
+  testthat::expect_equal(tardis(stringr::sentences,
+                                sigmoid_factor = NA, allcaps_factor = 1, dict_modifiers = "none", dict_negations = "none", use_punctuation = FALSE),
+                         suppressWarnings(tardis(stringr::sentences, simple_count = TRUE)))
+})
