@@ -146,6 +146,12 @@ testthat::test_that("Negations work as expected",{
   testthat::expect_lt(abs(tardis("not not not happy")$sentiment_mean), abs(tardis("not not happy")$sentiment_mean))
   testthat::expect_equal(tardis("not not not not happy")$sentiment_mean, tardis("not not not happy")$sentiment_mean)
 
+  # multi-word negations work okay
+  custom_negations <- dplyr::tibble(word = c("not", "ain't no"))
+  testthat::expect_equal(tardis("not good", dict_negations = custom_negations)$sentiment_mean, tardis("ain't no good", dict_negations = custom_negations)$sentiment_mean)
+  testthat::expect_lt(tardis("ain't no good", dict_negations = custom_negations)$sentiment_mean, tardis("good", dict_negations = custom_negations)$sentiment_mean)
+  testthat::expect_gt(tardis("ain't no bad", dict_negations = custom_negations)$sentiment_mean, tardis("bad", dict_negations = custom_negations)$sentiment_mean)
+
   # negations can be disabled
   testthat::expect_equal(tardis("not happy", dict_negations = "none")$sentiment_mean, tardis("happy")$sentiment_mean)
   testthat::expect_equal(tardis("not sad", dict_negations = "none")$sentiment_mean, tardis("sad")$sentiment_mean)

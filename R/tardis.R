@@ -186,6 +186,25 @@ tardis <- function(
     use_negations <- FALSE
   } else {
     use_negations <- TRUE
+
+    # IF MULTI-WORD NGRAMS IN NEGATIONS DICTIONARY
+    # if there are any multi-word ngrams (e.g. "ain't no")
+    multi_word_indices_neg <- grep(pattern = " ", x = dict_negations$word, fixed = TRUE)
+    if (length(multi_word_indices_neg) > 0) {
+
+      if (verbose) message ("Found multi-word ngrams in modifiers dictionary.")
+
+      for (i in 1:length(multi_word_indices_neg)) {
+        old_word <- dict_negations$word[[multi_word_indices_neg[[i]]]]
+        new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
+
+        dict_negations$word[[multi_word_indices_neg[[i]]]] <- new_word
+        sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
+
+      }
+
+    }
+
     dict_negations_vec <- rep(1, nrow(dict_negations))
     names(dict_negations_vec) <- dict_negations$word
   }
