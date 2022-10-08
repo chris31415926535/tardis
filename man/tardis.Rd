@@ -14,6 +14,8 @@ tardis(
   sigmoid_factor = 15,
   negation_factor = 0.75,
   allcaps_factor = 1.25,
+  use_punctuation = TRUE,
+  simple_count = FALSE,
   verbose = FALSE
 )
 }
@@ -44,10 +46,17 @@ Should probably be less than 1.}
 of sentiment-bearing terms in ALL CAPS. Should probably
 be more than 1, to increase effects.}
 
+\item{use_punctuation}{Boolean, default TRUE. Should we consider sentence-level punctuation?}
+
+\item{simple_count}{Boolean, default FALSE. Convenience parameter that overrides many
+other parameters to enable simple counts of dictionary words:
+no modifiers, negations, capitalization, or punctuation
+effects are considered and no sigmoid function is applied.}
+
 \item{verbose}{For debugging--should it print lots of messages to the console?}
 }
 \value{
-A data.frame with one row for each input text and three new columns:
+A `tbl_df` with one row for each input text and three new columns:
         `sentiment_mean`: the average sentiment for each sentence in each text.
         `sentiment_sd`: the standard deviation of sentence sentiments for each text.
         `sentiment_range`: the range of sentence sentiments for each text.

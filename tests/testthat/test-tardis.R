@@ -119,6 +119,13 @@ testthat::test_that("Modifiers work as expected", {
   testthat::expect_gt(tardis("very very very happy")$sentiment_mean, tardis("very very happy")$sentiment_mean)
   testthat::expect_equal(tardis("very very very very happy")$sentiment_mean, tardis("very very very happy")$sentiment_mean)
 
+  # multi-word modifiers work okay
+  custom_modifiers <- dplyr::tibble(word = c("very", "gosh darn"), booster_value = 0.293, booster_sign=1)
+  testthat::expect_gt(tardis("very happy", dict_modifiers = custom_modifiers)$sentiment_mean, tardis("happy", dict_modifiers = custom_modifiers)$sentiment_mean)
+  testthat::expect_gt(tardis("gosh darn happy", dict_modifiers = custom_modifiers)$sentiment_mean, tardis("happy", dict_modifiers = custom_modifiers)$sentiment_mean)
+  testthat::expect_lt(tardis("gosh darn sad", dict_modifiers = custom_modifiers)$sentiment_mean, tardis("sad", dict_modifiers = custom_modifiers)$sentiment_mean)
+  testthat::expect_equal(tardis("gosh darn happy", dict_modifiers = custom_modifiers)$sentiment_mean, tardis("very happy", dict_modifiers = custom_modifiers)$sentiment_mean)
+
   # modifiers can be disabled
   testthat::expect_equal(tardis("very happy", dict_modifiers = "none")$sentiment_mean, tardis("happy")$sentiment_mean)
   testthat::expect_equal(tardis("very sad", dict_modifiers = "none")$sentiment_mean, tardis("sad")$sentiment_mean)

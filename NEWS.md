@@ -7,6 +7,7 @@
 * Added parameters and tests to enable disabling modifiers and negations.
 * Added parameter to disable punctuation analysis.
 * Added convenience parameter simple_count to count word presences.
+* Add support for multi-word modifiers.
 * Added unit tests for all new features.
 * Internal code cleanup.
 

@@ -150,6 +150,25 @@ tardis <- function(
     use_modifiers <- FALSE
   } else {
     use_modifiers <- TRUE
+
+    # IF MULTI-WORD NGRAMS IN MODIFIERS DICTIONARY
+    # if there are any multi-word ngrams (e.g. "gosh darn", "bad ass")
+    multi_word_indices_mod <- grep(pattern = " ", x = dict_modifiers$word, fixed = TRUE)
+    if (length(multi_word_indices_mod) > 0) {
+
+      if (verbose) message ("Found multi-word ngrams in modifiers dictionary.")
+
+      for (i in 1:length(multi_word_indices_mod)) {
+        old_word <- dict_modifiers$word[[multi_word_indices_mod[[i]]]]
+        new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
+
+        dict_modifiers$word[[multi_word_indices_mod[[i]]]] <- new_word
+        sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
+
+      }
+
+    }
+
     dict_modifiers_vec <- dict_modifiers$booster_value
     names(dict_modifiers_vec) <- dict_modifiers$word
   }
