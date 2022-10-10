@@ -299,9 +299,9 @@ tardis <- function(
   result_text <- result_sentences %>%
     dplyr::group_by(text_id) %>%
     dplyr::summarise(
-      sentiment_mean = mean(sentence_score),
-      sentiment_sd = stats::sd(sentence_score),
-      sentiment_range = max(sentence_score) - min(sentence_score))
+      score_mean = mean(sentence_score),
+      score_sd = stats::sd(sentence_score),
+      score_range = max(sentence_score) - min(sentence_score))
 
   result_text <- dplyr::as_tibble(result_text)
 

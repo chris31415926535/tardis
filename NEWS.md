@@ -1,5 +1,6 @@
 # tardis 0.1.4
 
+* Change output column names from "sentiment" to "score" for generalizability.
 * Bugfix: multi-word tokens recognized properly when next to punctuation.
 * Sigmoid function is now optional, enabling simpler word counting.
 * New parameter: negation_factor, multiplier for damping sentiment after negation.
