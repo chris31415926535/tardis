@@ -33,7 +33,7 @@ testthat::test_that("Punctuation and capitalization together amplifies sentiment
 })
 
 testthat::test_that("Cpp11 function to split sentences works properly", {
-  temp_dict_sentiments <- dplyr::tibble(word = "happy")
+  temp_dict_sentiments <- dplyr::tibble(token = "happy")
   temp_dict_emojis <- ""
   test1 <- dplyr::tibble(sentences_orig = "hi! you!")
   test2 <- dplyr::tibble(sentences_orig = "HI!!!! you??!!! wow")
@@ -55,7 +55,7 @@ testthat::test_that("Cpp11 function to take pairwise nonzero value from two vect
 
 
 testthat::test_that("Custom dictionaries with no emojis work properly", {
-  custom_dict <- dplyr::tribble(~word, ~sentiment,
+  custom_dict <- dplyr::tribble(~token, ~score,
                                 "happy", 5,
                                 "sad", -5)
   testthat::expect_gt(tardis("happy", dict_sentiments = custom_dict)$score_mean, 0)
@@ -65,7 +65,7 @@ testthat::test_that("Custom dictionaries with no emojis work properly", {
 })
 
 testthat::test_that("Custom dictionaries that are ONLY emojis work properly", {
-  custom_dict <- dplyr::tribble(~word, ~sentiment,
+  custom_dict <- dplyr::tribble(~token, ~score,
                                 "❤️", 5,
                                 "😭", -5)
   testthat::expect_gt(tardis("❤️", dict_sentiments = custom_dict)$score_mean, 0)
@@ -75,7 +75,7 @@ testthat::test_that("Custom dictionaries that are ONLY emojis work properly", {
 })
 
 testthat::test_that("Custom dictionaries with text and emojis work properly", {
-  custom_dict <- dplyr::tribble(~word, ~sentiment,
+  custom_dict <- dplyr::tribble(~token, ~score,
                                 "❤️", 5,
                                 "sadness", -5,
                                 ":D", 5)
@@ -88,9 +88,9 @@ testthat::test_that("Custom dictionaries with text and emojis work properly", {
 
 testthat::test_that("Custom dictionaries with multi-word tokens work properly",{
   custom_dict <- dict_tardis_sentiment %>%
-    dplyr::add_row(word = "supreme court", sentiment = 0) %>%
-    dplyr::add_row(word = "happy sad", sentiment = 0) %>%
-    dplyr::add_row(word = "oh dear", sentiment = -3)
+    dplyr::add_row(token = "supreme court", score = 0) %>%
+    dplyr::add_row(token = "happy sad", score = 0) %>%
+    dplyr::add_row(token = "oh dear", score = -3)
 
 
   # if multi-word tokens  have sentiment-bearing sub-components, the subcomponents still work fine

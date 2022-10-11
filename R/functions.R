@@ -95,7 +95,7 @@ split_text_into_sentences <- function(sentences, emoji_regex_internal, dict_sent
   punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- NULL
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
-  emojis_in_dictionary <- dict_sentiments$word %>% stringr::str_subset(emoji_regex_internal)
+  emojis_in_dictionary <- dict_sentiments$token %>% stringr::str_subset(emoji_regex_internal)
 
   emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
   regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"
@@ -135,7 +135,7 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   # extracting emojis separately and only splitting on "(?<=(\\.|!|\\?){1,5}\\s)"
   # 2022-09-26 this version does stringsplit using Rcpp to split after string of !,?,.
   #            which is ~25x faster than the regex
-  emojis_in_dictionary <- dict_sentiments$word %>% stringr::str_subset(emoji_regex_internal)
+  emojis_in_dictionary <- dict_sentiments$token %>% stringr::str_subset(emoji_regex_internal)
 
   emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
   regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"

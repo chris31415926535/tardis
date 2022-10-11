@@ -1,4 +1,4 @@
-word,sentiment
+token,score
 $:,-1.5
 %),-0.4
 %-),-1.5
@@ -4713,7 +4713,6 @@ nicest,2.2
 niceties,1.5
 nicety,1.2
 nifty,1.7
-niggas,-1.4
 nigger,-3.3
 nimby,-0.8
 nimjd,-0.7

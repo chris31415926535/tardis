@@ -116,26 +116,26 @@ tardis <- function(
     dict_sentiments <- tardis::dict_tardis_sentiment
   }
 
-  dict_sentiments$word <- stringr::str_squish(dict_sentiments$word)
+  dict_sentiments$token <- stringr::str_squish(dict_sentiments$token)
 
   # IF MULTI-WORD NGRAMS IN SENTIMENT DICTIONARY
   # if there are any multi-word ngrams (e.g. "supreme court")
-  multi_word_indices <- grep(pattern = " ", x = dict_sentiments$word, fixed = TRUE)
+  multi_word_indices <- grep(pattern = " ", x = dict_sentiments$token, fixed = TRUE)
   if (length(multi_word_indices) > 0) {
     if (verbose) message ("Found multi-word ngrams in sentiment dictionary.")
     for (i in 1:length(multi_word_indices)) {
-      old_word <- dict_sentiments$word[[multi_word_indices[[i]]]]
+      old_word <- dict_sentiments$token[[multi_word_indices[[i]]]]
       new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
 
-      dict_sentiments$word[[multi_word_indices[[i]]]] <- new_word
+      dict_sentiments$token[[multi_word_indices[[i]]]] <- new_word
       sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
 
     }
 
   }
 
-  dict_sentiments_vec <- dict_sentiments$sentiment
-  names(dict_sentiments_vec) <- dict_sentiments$word
+  dict_sentiments_vec <- dict_sentiments$score
+  names(dict_sentiments_vec) <- dict_sentiments$token
 
   # Modifiers
 
@@ -311,3 +311,49 @@ tardis <- function(
   dplyr::bind_cols(final_output, result_text)
 
 }
+
+
+
+# tardis_multidict <- function(input_text, text_column, dictionaries, ...) {
+#
+#   dictionaries <- readr::read_csv("/mnt/c/Users/chris/Downloads/tardis_dict_test.csv") %>%
+#     dplyr::mutate(score = 1, word = ngram, sentiment = score) %>%
+#     dplyr::rename(dictionary = cluster)
+#
+#   input_text <- readr::read_csv("/mnt/c/Users/chris/Downloads/tardis_dict_text.csv")
+#
+#   text_column <- "body"
+#
+#   dict_names <- unique(dictionaries$dictionary)
+#
+#   results <- dplyr::tibble(.rows = nrow(input_text))
+#
+#   just_text <- input_text[,text_column]
+#   #results <- input_text
+#   #results <- input_text[,text_column]
+#
+#   for (dict_name in dict_names){
+#     message(dict_name)
+#     dictionary <- dplyr::filter(dictionaries, dictionary == dict_name) #%>%
+#     #dplyr::select(tidyselect::any_of(c("ngram", "score")))
+#
+#     result <- tardis::tardis(input_text = just_text, text_column = text_column, dict_sentiments = dictionary, ... )
+#
+#     result <- dplyr::rename(result,
+#                             !!sym(paste0("score_", dict_name, "_mean"))  := score_mean,
+#                             !!sym(paste0("score_", dict_name, "_sd"))    := score_sd,
+#                             !!sym(paste0("score_", dict_name, "_range")) := score_range,
+#     )
+#
+#     result[,text_column] <- NULL
+#
+#
+#     results <- dplyr::bind_cols(results, result)
+#   }
+#
+#   dplyr::bind_cols(input_text, results)
+# }
+#
+# test <- tardis_multidict(input_text, "body", sdf, simple_count = TRUE)
+#
+# testt <- dplyr::select(test, body, tidyselect::contains("mean"))

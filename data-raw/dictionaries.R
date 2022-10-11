@@ -3,6 +3,7 @@
 
 # VADER dict
 dict_vader <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
+  dplyr::rename(token = word, score = sentiment) %>%
   readr::write_csv("data-raw/dict_vader.csv")
 
 usethis::use_data(dict_vader, overwrite = TRUE)
@@ -11,7 +12,8 @@ usethis::use_data(dict_vader, overwrite = TRUE)
 # +1 for positive, -1 for negative
 #Minqing Hu and Bing Liu, “Mining and summarizing customer reviews.”, Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.
 dict_liu <- tidytext::sentiments %>%
-  dplyr::mutate(sentiment = dplyr::if_else(sentiment == "positive", 1, -1)) %>%
+  dplyr::mutate(score = dplyr::if_else(sentiment == "positive", 1, -1)) %>%
+  dplyr::rename(token = word) %>%
   readr::write_csv("data-raw/dict_liu.csv")
 
 usethis::use_data(dict_liu, overwrite = TRUE)
@@ -34,8 +36,8 @@ dict_emoji_raw <- readr::read_csv("https://www.clarin.si/repository/xmlui/bitstr
 
 dict_emoji <- dict_emoji_raw %>%
   dplyr::mutate(total = Positive + Negative + Neutral,
-                sentiment = (Positive - Negative) / total) %>%
-  dplyr::select(word = Emoji, sentiment) %>%
+                score = (Positive - Negative) / total) %>%
+  dplyr::select(token = Emoji, score) %>%
   readr::write_csv("data-raw/dict_emoji.csv")
 
 usethis::use_data(dict_emoji, overwrite = TRUE)
@@ -53,14 +55,15 @@ usethis::use_data(emoji_regex_internal, internal = TRUE, overwrite = TRUE)
 dict_emoji_temp <- dict_emoji_raw %>%
   dplyr::filter(Occurrences > 50) %>%
   dplyr::mutate(total = Positive + Negative + Neutral,
-                sentiment = (Positive - Negative) / total) %>%
-  dplyr::mutate(sentiment = dplyr::if_else(sentiment > 0, sentiment * 3.4, sentiment * 3.9)) %>%
-  dplyr::select(word = Emoji, sentiment) %>%
-  dplyr::add_row(word = "❤️", sentiment = 2.54, .before = 2)
+                score = (Positive - Negative) / total) %>%
+  dplyr::mutate(score = dplyr::if_else(score > 0, score * 3.4, score * 3.9)) %>%
+  dplyr::select(token = Emoji, score) %>%
+  dplyr::add_row(token = "❤️", score = 2.54, .before = 2)
 
 
 
-dict_tardis_sentiment <- dplyr::bind_rows(dict_vader, dict_emoji_temp)
+dict_tardis_sentiment <- dplyr::bind_rows(dict_vader, dict_emoji_temp) %>%
+  dplyr::filter(!stringr::str_detect(token, "ggas"))
 
 readr::write_csv(dict_tardis_sentiment, "data-raw/dict_tardis.csv")
 
