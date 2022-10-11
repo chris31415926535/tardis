@@ -120,7 +120,7 @@ testthat::test_that("Modifiers work as expected", {
   testthat::expect_equal(tardis("very very very very happy")$score, tardis("very very very happy")$score)
 
   # multi-word modifiers work okay
-  custom_modifiers <- dplyr::tibble(word = c("very", "gosh darn"), booster_value = 0.293, booster_sign=1)
+  custom_modifiers <- dplyr::tibble(token = c("very", "gosh darn"), booster_value = 0.293, booster_sign=1)
   testthat::expect_gt(tardis("very happy", dict_modifiers = custom_modifiers)$score, tardis("happy", dict_modifiers = custom_modifiers)$score)
   testthat::expect_gt(tardis("gosh darn happy", dict_modifiers = custom_modifiers)$score, tardis("happy", dict_modifiers = custom_modifiers)$score)
   testthat::expect_lt(tardis("gosh darn sad", dict_modifiers = custom_modifiers)$score, tardis("sad", dict_modifiers = custom_modifiers)$score)
@@ -147,7 +147,7 @@ testthat::test_that("Negations work as expected",{
   testthat::expect_equal(tardis("not not not not happy")$score, tardis("not not not happy")$score)
 
   # multi-word negations work okay
-  custom_negations <- dplyr::tibble(word = c("not", "ain't no"))
+  custom_negations <- dplyr::tibble(token = c("not", "ain't no"))
   testthat::expect_equal(tardis("not good", dict_negations = custom_negations)$score, tardis("ain't no good", dict_negations = custom_negations)$score)
   testthat::expect_lt(tardis("ain't no good", dict_negations = custom_negations)$score, tardis("good", dict_negations = custom_negations)$score)
   testthat::expect_gt(tardis("ain't no bad", dict_negations = custom_negations)$score, tardis("bad", dict_negations = custom_negations)$score)

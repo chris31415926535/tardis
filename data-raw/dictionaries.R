@@ -72,13 +72,14 @@ usethis::use_data(dict_tardis_sentiment, overwrite = TRUE)
 
 ###### MODIFIERS
 
-dict_vader_modifiers <- tidyvader::get_vader_dictionaries()$dictionary[[4]]
+dict_vader_modifiers <- tidyvader::get_vader_dictionaries()$dictionary[[4]] %>%
+  dplyr::rename(token = word)
 
 usethis::use_data(dict_vader_modifiers, overwrite = TRUE)
 
 
 ### NEGATIONS
 
-dict_vader_negations <- dplyr::tibble(word = tidyvader::get_vader_dictionaries()$dictionary[[3]])
+dict_vader_negations <- dplyr::tibble(token = tidyvader::get_vader_dictionaries()$dictionary[[3]])
 
 usethis::use_data(dict_vader_negations, overwrite = TRUE)
