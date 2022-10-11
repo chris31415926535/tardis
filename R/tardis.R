@@ -43,6 +43,9 @@
 #'                       of sentiment-bearing terms in ALL CAPS. Should probably
 #'                       be more than 1, to increase effects.
 #' @param use_punctuation Boolean, default TRUE. Should we consider sentence-level punctuation?
+#' @param summary_function For multi-sentence texts, how should we summarise sentence
+#'                         scores into a text score? Default "mean", also accepts
+#'                         "median", "max", "min", and "sum".
 #' @param simple_count Boolean, default FALSE. Convenience parameter that overrides many
 #'                     other parameters to enable simple counts of dictionary words:
 #'                     no modifiers, negations, capitalization, or punctuation
@@ -64,11 +67,14 @@ tardis <- function(
   negation_factor = 0.75,
   allcaps_factor = 1.25,
   use_punctuation = TRUE,
+  summary_function = c("mean","median", "max", "min", "sum"),
   simple_count = FALSE,
   verbose = FALSE
 ) {
   # for dplyr data masking
   sentences_orig <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
+
+  summary_function <- match.arg(summary_function, summary_function)
 
   if (simple_count) {
     warning("Parameter simple_count = TRUE overrides most other parameters. Make sure this is intended!")
@@ -78,7 +84,16 @@ tardis <- function(
     negation_factor <- 1
     allcaps_factor <- 1
     use_punctuation <- FALSE
+    summary_function <- "sum"
   }
+
+  # set up summary function
+  sum_fun <- switch(summary_function,
+         "mean" = mean,
+         "median" = median,
+         "max" = max,
+         "min" = min,
+         "sum" = sum)
 
   # multiplicative scale factors for negations and all caps words
   # allcaps_factor needs 1 subtracted here because of how it's treated later
@@ -296,10 +311,11 @@ tardis <- function(
 
   #################-
   # TEXT SCORES ----
+  # we're using the summary function defined up top
   result_text <- result_sentences %>%
     dplyr::group_by(text_id) %>%
     dplyr::summarise(
-      score_mean = mean(sentence_score),
+      score = sum_fun(sentence_score),
       score_sd = stats::sd(sentence_score),
       score_range = max(sentence_score) - min(sentence_score))
 

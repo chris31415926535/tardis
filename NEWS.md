@@ -1,12 +1,14 @@
 # tardis 0.1.4
 
 * Change output column names from "sentiment" to "score" for generalizability.
+* Refactor sentiment dictionary to be more general, have column names "token" and "score"
 * Bugfix: multi-word tokens recognized properly when next to punctuation.
 * Sigmoid function is now optional, enabling simpler word counting.
 * New parameter: negation_factor, multiplier for damping sentiment after negation.
 * New parameter: allcaps_factor, multiplier for ALL CAPS sentiment increases.
 * Added parameters and tests to enable disabling modifiers and negations.
 * Added parameter to disable punctuation analysis.
+* Added custom summary functions.
 * Added convenience parameter simple_count to count word presences.
 * Add support for multi-word modifiers.
 * Add support for multi-word negations.
