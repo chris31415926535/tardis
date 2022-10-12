@@ -133,9 +133,11 @@ testthat::test_that("Modifiers work as expected", {
 
 testthat::test_that("Negations work as expected",{
 
-  # negations flip direction
+  testthat::test_that("Negations flip direction",{
   testthat::expect_lt(tardis("not happy")$score, tardis("happy")$score)
   testthat::expect_gt(tardis("not sad")$score, tardis("sad")$score)
+
+  })
 
   # negations damp effect sizes
   testthat::expect_lt(abs(tardis("not happy")$score), abs(tardis("happy")$score))

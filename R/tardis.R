@@ -76,6 +76,9 @@ tardis <- function(
 
   summary_function <- match.arg(summary_function, summary_function)
 
+  # in case it's null by accident, set it to default. this happens sometimes with ... calls, need to debug
+  if (is.null(sigmoid_factor)) sigmoid_factor <- 15
+
   if (simple_count) {
     warning("Parameter simple_count = TRUE overrides most other parameters. Make sure this is intended!")
     dict_modifiers <- "none"
@@ -126,7 +129,7 @@ tardis <- function(
   # DICTIONARY SETUP ----
 
   # Sentiments
-  if (all(is.na(dict_sentiments))){
+  if (all(is.na(dict_sentiments)) | all(is.null(dict_sentiments))){
     if (verbose) message ("Using default sentiments dictionary.")
     dict_sentiments <- tardis::dict_tardis_sentiment
   }
@@ -155,7 +158,7 @@ tardis <- function(
   # Modifiers
 
   # if no dictionary supplied by user, use default dictionary
-  if (all(is.na(dict_modifiers))){
+  if (all(is.na(dict_modifiers)) | all(is.null(dict_modifiers))){
     dict_modifiers <- tardis::dict_vader_modifiers
   }
 
@@ -191,7 +194,7 @@ tardis <- function(
   # Negations
 
   # if no dictionary supplied by user, use default dictionary
-  if (all(is.na(dict_negations))){
+  if (all(is.na(dict_negations)) | all(is.null(dict_negations))){
     dict_negations <- tardis::dict_vader_negations
   }
 
@@ -330,46 +333,98 @@ tardis <- function(
 
 
 
-# tardis_multidict <- function(input_text, text_column, dictionaries, ...) {
+#' Analyze text with more than one dictionary
+#'
+#' This convenience function takes a text and a set of dictionaries, and calls
+#' `tardis::tardis()` once for each dictionary. Other parameters are also passed
+#' along to `tardis()`.
+#'
+#' Dictionaries must be in a single `tbl_df` with at least two columns:
+#' `token`, containing the tokens belonging to each dictionary; and `dicionary`,
+#'  which contains a unique identifier mapping each token to a dictionary.
+#'  Weights, if present, must be in a column named `score`.
+#'
+#'  Tokens can be mapped to multiple dictionaries, but each row maps one token
+#'  to one dictionary.
+#'
+#' @param input_text A text to be analyzed, either a `tbl_df` or a character vector.
+#' @param text_column If `tbl_df` input, a character with the name of the input
+#'                    column containing the text to be analyzed.
+#' @param dictionaries A single `tbl_df` with columns `dictionary`, `token`, and
+#'                     (optionally, for weighted dictionaries) `score`.
+#' @param ... Other parameters passed on to `tardis::tardis()`.
+#'
+#' @return A `tbl_df` with new columns for each dictionary.
+#' @export
+tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
+
+
+
+  dict_names <- unique(dictionaries$dictionary)
+
+  results <- dplyr::tibble(.rows = nrow(input_text))
+
+  just_text <- input_text[,text_column]
+
+  for (dict_name in dict_names){
+    message(dict_name)
+    dictionary <- dplyr::filter(dictionaries, dictionary == dict_name)
+
+    result <- tardis::tardis(input_text = just_text, text_column = text_column, dict_sentiments = dictionary, ... )
+
+    result <- dplyr::rename(result,
+                            !!sym(paste0("score_", dict_name))  := score,
+                            !!sym(paste0("score_", dict_name, "_sd"))    := score_sd,
+                            !!sym(paste0("score_", dict_name, "_range")) := score_range,
+    )
+
+    result[,text_column] <- NULL
+
+
+    results <- dplyr::bind_cols(results, result)
+  }
+
+  dplyr::bind_cols(input_text, results)
+}
 #
-#   dictionaries <- readr::read_csv("/mnt/c/Users/chris/Downloads/tardis_dict_test.csv") %>%
-#     dplyr::mutate(score = 1, word = ngram, sentiment = score) %>%
-#     dplyr::rename(dictionary = cluster)
+
+# https://nrc.canada.ca/en/research-development/products-services/technical-advisory-services/sentiment-emotion-lexicons
+# dictionaries <- readr::read_csv("/mnt/c/Users/chris/Downloads/tardis_dict_test.csv") %>%
+#   dplyr::mutate(score = 1, token = ngram) %>%
+#   dplyr::rename(dictionary = cluster)
+
+# input_text <- readr::read_csv("/mnt/c/Users/chris/Downloads/tardis_dict_text.csv")
+
+# text_column <- "body"
+# nrc_emotion <- textdata::lexicon_nrc() %>%
+#   dplyr::rename(token = word, dictionary = sentiment) %>%
+#   dplyr::mutate(score = 1)
 #
-#   input_text <- readr::read_csv("/mnt/c/Users/chris/Downloads/tardis_dict_text.csv")
+# input_text <- pushshiftR::get_reddit_comments(q = "corgis", size = 500)
 #
-#   text_column <- "body"
+# text <- input_text %>%
+#   select(body)
 #
-#   dict_names <- unique(dictionaries$dictionary)
+# text <- dplyr::tibble(body = c("I am so angry!", "I am angry.",
+# "I'm not angry.", "Your mother and I aren't angry with you, we're just disappointed.",
+# "I can't wait!"))
 #
-#   results <- dplyr::tibble(.rows = nrow(input_text))
+# test <- tardis_multidict(input_text = text, text_column = "body", dictionaries = nrc_emotion, dict_negations = "none") %>%
+#   dplyr::select(-tidyselect::contains(c("sd", "range")))
 #
-#   just_text <- input_text[,text_column]
-#   #results <- input_text
-#   #results <- input_text[,text_column]
-#
-#   for (dict_name in dict_names){
-#     message(dict_name)
-#     dictionary <- dplyr::filter(dictionaries, dictionary == dict_name) #%>%
-#     #dplyr::select(tidyselect::any_of(c("ngram", "score")))
-#
-#     result <- tardis::tardis(input_text = just_text, text_column = text_column, dict_sentiments = dictionary, ... )
-#
-#     result <- dplyr::rename(result,
-#                             !!sym(paste0("score_", dict_name, "_mean"))  := score_mean,
-#                             !!sym(paste0("score_", dict_name, "_sd"))    := score_sd,
-#                             !!sym(paste0("score_", dict_name, "_range")) := score_range,
-#     )
-#
-#     result[,text_column] <- NULL
+# test <- tardis_multidict(input_text = text, text_column = "body", dictionaries = nrc_emotion) %>%
+#   dplyr::select(-tidyselect::contains(c("sd", "range")))
 #
 #
-#     results <- dplyr::bind_cols(results, result)
-#   }
-#
-#   dplyr::bind_cols(input_text, results)
-# }
 #
 # test <- tardis_multidict(input_text, "body", sdf, simple_count = TRUE)
 #
-# testt <- dplyr::select(test, body, tidyselect::contains("mean"))
+#
+# testt <- dplyr::select(test, body, tidyselect::contains("score"))
+#
+#
+# z <- function(input_text, ...) {
+#   tardis::tardis(input_text, ...)
+# }
+#
+# z(" very happy")
