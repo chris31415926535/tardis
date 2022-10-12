@@ -7,9 +7,9 @@
 \format{
 A data frame with 7506 rows and 2 variables:
 \describe{
-  \item{token}{word or ngram}
-  \item{score}{sentiment as number}
-  ...
+\item{token}{word or ngram}
+\item{score}{sentiment as number}
+...
 }
 }
 \source{

@@ -355,6 +355,25 @@ tardis <- function(
 #' @param ... Other parameters passed on to `tardis::tardis()`.
 #'
 #' @return A `tbl_df` with new columns for each dictionary.
+#'
+#' @examples
+#' \dontrun{
+#' library(magrittr)
+#' # Get NRC emotions dataset from textdata package
+#' nrc_emotion <- textdata::lexicon_nrc() %>%
+#'   dplyr::rename(token = word, dictionary = sentiment) %>%
+#'   dplyr::mutate(score = 1)
+#'
+#' # set up some input text
+#' text <- dplyr::tibble(body = c("I am so angry!", "I am angry.",
+#'   "I'm not angry.", "Your mother and I aren't angry, we're just disappointed."))
+#'
+#' emotions <- tardis_multidict(input_text = text, text_column = "body",
+#'   dictionaries = nrc_emotion) %>%
+#'   dplyr::select(body, score_anger, score_sadness)
+#'
+#'  emotions
+#' }
 #' @export
 tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
 
@@ -364,14 +383,27 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
   # manual import for clean R CMD CHECK
   `:=` <- rlang::`:=`
 
+
+  ################################.
+  # INPUT TEXT SETUP ----
+
+  # VECTOR INPUT: set up
+  if (is.vector(input_text)){
+    text_column <- "sentences_orig"
+    input_text <- dplyr::tibble(sentences_orig = stringr::str_trim(input_text))
+  }
+
+
   dict_names <- unique(dictionaries$dictionary)
+
+  if (!"score" %in% colnames(dictionaries)) dictionaries$score <- 1
 
   results <- dplyr::tibble(.rows = nrow(input_text))
 
   just_text <- input_text[,text_column]
 
   for (dict_name in dict_names){
-    message(dict_name)
+    #message(dict_name)
     dictionary <- dplyr::filter(dictionaries, dictionary == dict_name)
 
     result <- tardis::tardis(input_text = just_text, text_column = text_column, dict_sentiments = dictionary, ... )
@@ -409,7 +441,7 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
 #   select(body)
 #
 # text <- dplyr::tibble(body = c("I am so angry!", "I am angry.",
-# "I'm not angry.", "Your mother and I aren't angry with you, we're just disappointed.",
+# "I'm not angry.", "Your mother and I aren't angry, we're just disappointed.",
 # "I can't wait!"))
 #
 # test <- tardis_multidict(input_text = text, text_column = "body", dictionaries = nrc_emotion, dict_negations = "none") %>%
@@ -431,3 +463,17 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
 # }
 #
 # z(" very happy")
+#
+# #
+# library(magrittr)
+# nrc_emotion <- textdata::lexicon_nrc() %>%
+# dplyr::rename(token = word, dictionary = sentiment)
+#
+# # set up some input text
+# text <- dplyr::tibble(body = c("I am so angry!", "I am angry.",
+# "I'm not angry.", "Your mother and I aren't angry, we're just disappointed."))
+#
+# emotions <- tardis::tardis_multidict(input_text = text, text_column = "body", dictionaries = nrc_emotion) %>%
+# dplyr::select(body, score_anger, score_sadness)
+#
+# emotions

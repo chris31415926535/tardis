@@ -18,6 +18,6 @@ Sentiment dictionary for emojis.
 }
 \references{
 {Kralj Novak P, Smailović J, Sluban B, Mozetič I (2015) Sentiment of
- Emojis. PLoS ONE 10(12): e0144296.}
+Emojis. PLoS ONE 10(12): e0144296.}
 }
 \keyword{datasets}

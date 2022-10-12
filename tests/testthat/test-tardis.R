@@ -161,8 +161,49 @@ testthat::test_that("Negations work as expected",{
 })
 
 
-testthat::test_that("Parameter simple_count works as expected", {
+testthat::test_that("Parameter simple_count works as expected with tbl_df input", {
   testthat::expect_equal(tardis(stringr::sentences,
                                 sigmoid_factor = NA, allcaps_factor = 1, dict_modifiers = "none", dict_negations = "none", use_punctuation = FALSE, summary_function = "sum"),
                          suppressWarnings(tardis(stringr::sentences, simple_count = TRUE)))
+})
+
+
+testthat::test_that("Multi-dictionary wrapper functions works", {
+  dictionaries <- dplyr::tibble(dictionary = c("good", "good", "bad", "bad"),
+                                token = c("good", "great", "bad", "awful"),
+                                score = c(1, 2, 1, 2))
+
+  input_texts <- dplyr::tibble(body = c("this is good.",
+                                        "this is great.",
+                                        "this is bad.",
+                                        "this is not bad.",
+                                        "this is awful.",
+                                        "this is awful!"))
+
+  result <- tardis::tardis_multidict(input_text = input_texts,
+                                     text_column = "body",
+                                     dictionaries = dictionaries) %>%
+    dplyr::select(body, score_good, score_bad)
+
+  # we get the basic output form we expect
+  testthat::expect_s3_class(result, "tbl_df")
+  testthat::expect_equal(nrow(result), nrow(input_texts))
+
+  # good works properly
+  testthat::expect_gt(result[2,]$score_good, result[1,]$score_good)
+  testthat::expect_equal(result[2,]$score_bad, 0)
+
+  # bad works properly
+  testthat::expect_gt(result[5,]$score_bad, result[4,]$score_bad)
+
+  # punctuation works
+  testthat::expect_gt(result[6,]$score_bad, result[5,]$score_bad)
+
+  # negation works
+  testthat::expect_lt(result[4,]$score_bad, 0)
+
+  # vector input works
+  result_vec <- tardis::tardis_multidict(c("good dog", "bad dog"), dictionaries = dictionaries)
+  testthat::expect_equal(result_vec[1,]$score_good, 0.25)
+  testthat::expect_equal(result_vec[2,]$score_bad, 0.25)
 })

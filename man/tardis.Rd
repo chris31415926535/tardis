@@ -26,13 +26,13 @@ tardis(
 \item{text_column}{If using data.frame input, the name of the column of text to analyze.}
 
 \item{dict_sentiments}{Optional sentiment dictionary, defaults to internal tardis dictionary.
-A data.frame with two columns: `word` and `value`.}
+A data.frame with two columns: \code{word} and \code{value}.}
 
 \item{dict_modifiers}{Optional modifiers dictionary, or "none" to disable modifiers.
-Defaults to internal tardis dictionary. A data.frame with two columns: `word` and `value`.}
+Defaults to internal tardis dictionary. A data.frame with two columns: \code{word} and \code{value}.}
 
 \item{dict_negations}{Optional negation dictionary, or "none" to disable negations.
-Defaults to internal tardis dictionary. A data.frame with one column: `word`.}
+Defaults to internal tardis dictionary. A data.frame with one column: \code{word}.}
 
 \item{sigmoid_factor}{Numeric, default 15. Factor for scaling sentence scores to -1/+1
 using a sigmoid function. Set to NA to disable the sigmoid function
@@ -61,10 +61,10 @@ effects are considered and no sigmoid function is applied.}
 \item{verbose}{For debugging--should it print lots of messages to the console?}
 }
 \value{
-A `tbl_df` with one row for each input text and three new columns:
-        `sentiment_mean`: the average sentiment for each sentence in each text.
-        `sentiment_sd`: the standard deviation of sentence sentiments for each text.
-        `sentiment_range`: the range of sentence sentiments for each text.
+A \code{tbl_df} with one row for each input text and three new columns:
+\code{sentiment_mean}: the average sentiment for each sentence in each text.
+\code{sentiment_sd}: the standard deviation of sentence sentiments for each text.
+\code{sentiment_range}: the range of sentence sentiments for each text.
 }
 \description{
 This function uses dictionaries (either the included defaults or user-supplied)

@@ -7,30 +7,49 @@
 tardis_multidict(input_text, text_column = NA, dictionaries, ...)
 }
 \arguments{
-\item{input_text}{A text to be analyzed, either a `tbl_df` or a character vector.}
+\item{input_text}{A text to be analyzed, either a \code{tbl_df} or a character vector.}
 
-\item{text_column}{If `tbl_df` input, a character with the name of the input
+\item{text_column}{If \code{tbl_df} input, a character with the name of the input
 column containing the text to be analyzed.}
 
-\item{dictionaries}{A single `tbl_df` with columns `dictionary`, `token`, and
-(optionally, for weighted dictionaries) `score`.}
+\item{dictionaries}{A single \code{tbl_df} with columns \code{dictionary}, \code{token}, and
+(optionally, for weighted dictionaries) \code{score}.}
 
-\item{...}{Other parameters passed on to `tardis::tardis()`.}
+\item{...}{Other parameters passed on to \code{tardis::tardis()}.}
 }
 \value{
-A `tbl_df` with new columns for each dictionary.
+A \code{tbl_df} with new columns for each dictionary.
 }
 \description{
 This convenience function takes a text and a set of dictionaries, and calls
-`tardis::tardis()` once for each dictionary. Other parameters are also passed
-along to `tardis()`.
+\code{tardis::tardis()} once for each dictionary. Other parameters are also passed
+along to \code{tardis()}.
 }
 \details{
-Dictionaries must be in a single `tbl_df` with at least two columns:
-`token`, containing the tokens belonging to each dictionary; and `dicionary`,
- which contains a unique identifier mapping each token to a dictionary.
- Weights, if present, must be in a column named `score`.
+Dictionaries must be in a single \code{tbl_df} with at least two columns:
+\code{token}, containing the tokens belonging to each dictionary; and \code{dicionary},
+which contains a unique identifier mapping each token to a dictionary.
+Weights, if present, must be in a column named \code{score}.
 
- Tokens can be mapped to multiple dictionaries, but each row maps one token
- to one dictionary.
+Tokens can be mapped to multiple dictionaries, but each row maps one token
+to one dictionary.
+}
+\examples{
+\dontrun{
+library(magrittr)
+# Get NRC emotions dataset from textdata package
+nrc_emotion <- textdata::lexicon_nrc() \%>\%
+  dplyr::rename(token = word, dictionary = sentiment) \%>\%
+  dplyr::mutate(score = 1)
+
+# set up some input text
+text <- dplyr::tibble(body = c("I am so angry!", "I am angry.",
+  "I'm not angry.", "Your mother and I aren't angry, we're just disappointed."))
+
+emotions <- tardis_multidict(input_text = text, text_column = "body",
+  dictionaries = nrc_emotion) \%>\%
+  dplyr::select(body, score_anger, score_sadness)
+
+ emotions
+}
 }

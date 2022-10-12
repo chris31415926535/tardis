@@ -37,3 +37,4 @@ LinkingTo:
     cpp11
 SystemRequirements: C++11
 VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)

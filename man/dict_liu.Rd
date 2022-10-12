@@ -9,8 +9,8 @@ An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) w
 }
 \source{
 {Minqing Hu and Bing Liu, “Mining and summarizing customer reviews.”,
- Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery
- & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.}
+Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery
+& Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.}
 }
 \usage{
 dict_liu
