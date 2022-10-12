@@ -7,8 +7,8 @@
 #'
 #' @format A data frame with 7506 rows and 2 variables:
 #' \describe{
-#'   \item{word}{word}
-#'   \item{sentiment}{sentiment as number}
+#'   \item{token}{word or ngram}
+#'   \item{score}{sentiment as number}
 #'   ...
 #' }
 #' @source \url{https://CRAN.R-project.org/package=vader}

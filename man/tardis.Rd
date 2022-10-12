@@ -15,6 +15,7 @@ tardis(
   negation_factor = 0.75,
   allcaps_factor = 1.25,
   use_punctuation = TRUE,
+  summary_function = c("mean", "median", "max", "min", "sum"),
   simple_count = FALSE,
   verbose = FALSE
 )
@@ -47,6 +48,10 @@ of sentiment-bearing terms in ALL CAPS. Should probably
 be more than 1, to increase effects.}
 
 \item{use_punctuation}{Boolean, default TRUE. Should we consider sentence-level punctuation?}
+
+\item{summary_function}{For multi-sentence texts, how should we summarise sentence
+scores into a text score? Default "mean", also accepts
+"median", "max", "min", and "sum".}
 
 \item{simple_count}{Boolean, default FALSE. Convenience parameter that overrides many
 other parameters to enable simple counts of dictionary words:

@@ -2,5 +2,6 @@
 
 export("%>%")
 export(tardis)
+export(tardis_multidict)
 importFrom(magrittr,"%>%")
 useDynLib(tardis, .registration = TRUE)

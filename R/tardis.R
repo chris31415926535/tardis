@@ -93,7 +93,7 @@ tardis <- function(
   # set up summary function
   sum_fun <- switch(summary_function,
          "mean" = mean,
-         "median" = median,
+         "median" = stats::median,
          "max" = max,
          "min" = min,
          "sum" = sum)
@@ -358,6 +358,12 @@ tardis <- function(
 #' @export
 tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
 
+  # for dplyr data masking
+  score <- score_range <- score_sd <- NULL
+
+  # manual import for clean R CMD CHECK
+  `:=` <- rlang::`:=`
+
 
 
   dict_names <- unique(dictionaries$dictionary)
@@ -373,9 +379,9 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
     result <- tardis::tardis(input_text = just_text, text_column = text_column, dict_sentiments = dictionary, ... )
 
     result <- dplyr::rename(result,
-                            !!sym(paste0("score_", dict_name))  := score,
-                            !!sym(paste0("score_", dict_name, "_sd"))    := score_sd,
-                            !!sym(paste0("score_", dict_name, "_range")) := score_range,
+                            !!rlang::sym(paste0("score_", dict_name))  := score,
+                            !!rlang::sym(paste0("score_", dict_name, "_sd"))    := score_sd,
+                            !!rlang::sym(paste0("score_", dict_name, "_range")) := score_range,
     )
 
     result[,text_column] <- NULL
