@@ -91,40 +91,6 @@ handle_modifiers <- function(result, dict_modifiers_vec, use_modifiers) {
   return(result)
 }
 
-split_text_into_sentences <- function(sentences, emoji_regex_internal, dict_sentiments){
-  punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- NULL
-  #look behind for punctuation, look ahead for emojis
-  # but only look for emojis that are present in the dictionary! huge time saver
-  emojis_in_dictionary <- dict_sentiments$token %>% stringr::str_subset(emoji_regex_internal)
-
-  emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
-  regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"
-
-  # FIXME TODO: lookahead and lookbehind emoji regexes are VERY slow, so just lookahead for now
-  if (length(emojis_in_dictionary) > 0) regex_pattern <- paste0(regex_pattern, "|(?=",emoji_regex,")") # |(?<=",emoji_regex,")") # emo::ji_rx
-
-
-  # need an id for each text, then one for each sentence.
-  # tidying it and keeping track...
-  # FIXME this is a big bottleneck with lots of emojis
-  # unnesting is the big time suck
-  # right now splits emojis into own sentence with lookahead and lookbehind
-  sentences$text_id <- 1:nrow(sentences)
-
-
-  sentences <- dplyr::mutate(sentences,
-                             sentence = stringi::stri_split_regex(str=sentences_orig, pattern = regex_pattern, simplify = FALSE, omit_empty = TRUE))
-  #bench::mark(unnest = {
-  sentences <- tidyr::unnest(sentences, sentence)
-  #})
-  result <- sentences
-
-  # assign unique sentence ids
-  result$sentence_id <- 1:nrow(result)
-
-  return(result)
-}
-
 
 split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dict_sentiments){
   # dplyr data masking
