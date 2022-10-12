@@ -41,4 +41,5 @@
 #' Sentiment dictionary for TARDIS package.
 #'
 #' Combines VADER and emoji dictionaries.
+#' @encoding UTF-8
 "dict_tardis_sentiment"

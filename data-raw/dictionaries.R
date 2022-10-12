@@ -1,5 +1,5 @@
 ## Set up dictionaries
-
+library(magrittr)
 
 # VADER dict
 dict_vader <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
@@ -58,7 +58,7 @@ dict_emoji_temp <- dict_emoji_raw %>%
                 score = (Positive - Negative) / total) %>%
   dplyr::mutate(score = dplyr::if_else(score > 0, score * 3.4, score * 3.9)) %>%
   dplyr::select(token = Emoji, score) %>%
-  dplyr::add_row(token = "❤️", score = 2.54, .before = 2)
+  dplyr::add_row(token = utf8::as_utf8("❤️"), score = 2.54, .before = 2)
 
 
 
