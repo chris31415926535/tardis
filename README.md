@@ -11,6 +11,7 @@ status](https://www.r-pkg.org/badges/version/tardis)](https://CRAN.R-project.org
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Codecov test
 coverage](https://codecov.io/gh/chris31415926535/tardis/branch/main/graph/badge.svg)](https://app.codecov.io/gh/chris31415926535/tardis?branch=main)
+[![R-CMD-check](https://github.com/chris31415926535/tardis/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chris31415926535/tardis/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 TARDIS uses simple rules and dictionaries to analyze text. By default it
@@ -58,16 +59,16 @@ text <- c("I am happy.",
           "I am really not happy!")
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, sentiment_mean) %>%
+  dplyr::select(sentences_orig, score) %>%
   knitr::kable()
 ```
 
-| sentences_orig         | sentiment_mean |
-|:-----------------------|---------------:|
-| I am happy.            |      0.5718850 |
-| I am really happy.     |      0.6695383 |
-| I am really happy!     |      0.6987571 |
-| I am really not happy! |     -0.5968026 |
+| sentences_orig         |      score |
+|:-----------------------|-----------:|
+| I am happy.            |  0.5718850 |
+| I am really happy.     |  0.6695383 |
+| I am really happy!     |  0.6987571 |
+| I am really not happy! | -0.5968026 |
 
 Tardis also handles blocks of text differently from other
 sentiment-analysis algorithms, most of which treat blocks of text as
@@ -81,13 +82,13 @@ may be close to neutral overall.
 text <- "This sentence is neutral. This one is really happy! This one is absolutely miserable."
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
-| sentences_orig                                                                        | sentiment_mean | sentiment_sd | sentiment_range |
-|:--------------------------------------------------------------------------------------|---------------:|-------------:|----------------:|
-| This sentence is neutral. This one is really happy! This one is absolutely miserable. |      0.0613416 |    0.6455055 |        1.290718 |
+| sentences_orig                                                                        |     score |  score_sd | score_range |
+|:--------------------------------------------------------------------------------------|----------:|----------:|------------:|
+| This sentence is neutral. This one is really happy! This one is absolutely miserable. | 0.0613416 | 0.6455055 |    1.290718 |
 
 Or even passive-aggressive hostility:
 
@@ -95,13 +96,13 @@ Or even passive-aggressive hostility:
 text <- "Die in a fire 😘" 
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
-| sentences_orig  | sentiment_mean | sentiment_sd | sentiment_range |
-|:----------------|---------------:|-------------:|----------------:|
-| Die in a fire 😘 |     -0.0664554 |    0.9568319 |        1.353165 |
+| sentences_orig  |      score |  score_sd | score_range |
+|:----------------|-----------:|----------:|------------:|
+| Die in a fire 😘 | -0.0664554 | 0.9568319 |    1.353165 |
 
 ## The algorithm
 

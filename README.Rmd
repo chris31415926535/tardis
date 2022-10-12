@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
 [![CRAN status](https://www.r-pkg.org/badges/version/tardis)](https://CRAN.R-project.org/package=tardis)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Codecov test coverage](https://codecov.io/gh/chris31415926535/tardis/branch/main/graph/badge.svg)](https://app.codecov.io/gh/chris31415926535/tardis?branch=main)
+[![R-CMD-check](https://github.com/chris31415926535/tardis/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chris31415926535/tardis/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 TARDIS uses simple rules and dictionaries to analyze text. By
@@ -67,7 +68,7 @@ text <- c("I am happy.",
           "I am really not happy!")
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, sentiment_mean) %>%
+  dplyr::select(sentences_orig, score) %>%
   knitr::kable()
 ```
 
@@ -77,7 +78,7 @@ Tardis also handles blocks of text differently from other sentiment-analysis alg
 text <- "This sentence is neutral. This one is really happy! This one is absolutely miserable."
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
@@ -87,7 +88,7 @@ Or even passive-aggressive hostility:
 text <- "Die in a fire 😘" 
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, sentiment_mean, sentiment_sd, sentiment_range) %>%
+  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
