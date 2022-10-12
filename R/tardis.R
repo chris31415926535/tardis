@@ -364,8 +364,6 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
   # manual import for clean R CMD CHECK
   `:=` <- rlang::`:=`
 
-
-
   dict_names <- unique(dictionaries$dictionary)
 
   results <- dplyr::tibble(.rows = nrow(input_text))
@@ -385,7 +383,6 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
     )
 
     result[,text_column] <- NULL
-
 
     results <- dplyr::bind_cols(results, result)
   }
