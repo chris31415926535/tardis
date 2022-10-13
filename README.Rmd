@@ -118,7 +118,7 @@ tardis::tardis(text) %>%
 
 
 ## Benchmarking
-
+ 
 The major bottlenecks have been addressed using `cpp11` so the function is reasonably fast, handling roughly 13000 sentences/second using test data from `stringr::sentences`:
 
 ```{r benchmark_plot, echo = FALSE, warning=FALSE, message=FALSE}

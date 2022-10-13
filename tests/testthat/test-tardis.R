@@ -16,8 +16,12 @@ testthat::test_that("Capitalization amplifies sentiment",{
   testthat::expect_lt(tardis("SAD")$score , tardis("sad")$score)
 })
 
-testthat::test_that("Punctuation amplifies sentiment",{
+testthat::test_that("Punctuation amplifies sentiment up to 3 points, and not for one question mark",{
   testthat::expect_gt(tardis("happy!")$score , tardis("happy")$score)
+  testthat::expect_gt(tardis("happy!!")$score , tardis("happy!")$score)
+  testthat::expect_gt(tardis("happy!?!")$score , tardis("happy!!")$score)
+  testthat::expect_equal(tardis("happy!?!?!!")$score , tardis("happy!?!")$score)
+  testthat::expect_equal(tardis("happy?")$score , tardis("happy")$score)
   testthat::expect_lt(tardis("sad!")$score , tardis("sad")$score)
 })
 
@@ -206,4 +210,10 @@ testthat::test_that("Multi-dictionary wrapper functions works", {
   result_vec <- tardis::tardis_multidict(c("good dog", "bad dog"), dictionaries = dictionaries)
   testthat::expect_equal(result_vec[1,]$score_good, 0.25)
   testthat::expect_equal(result_vec[2,]$score_bad, 0.25)
+})
+
+
+testthat::test_that("cpp function count_punct_cpp11 works", {
+  testthat::expect_equal(count_punct_cpp11(em = as.integer(c(0,1,1,5)), qm = as.integer(c(1, 0, 1, 5))),
+                         c(0,1,2,3))
 })

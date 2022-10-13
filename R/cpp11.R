@@ -7,3 +7,7 @@ split_string_after_punctuation_cpp11 <- function(string_to_split) {
 get_nonzero_value_cpp11 <- function(x, y) {
   .Call(`_tardis_get_nonzero_value_cpp11`, x, y)
 }
+
+count_punct_cpp11 <- function(em, qm) {
+  .Call(`_tardis_count_punct_cpp11`, em, qm)
+}

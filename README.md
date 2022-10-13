@@ -67,8 +67,8 @@ tardis::tardis(text) %>%
 |:-----------------------|-----------:|
 | I am happy.            |  0.5718850 |
 | I am really happy.     |  0.6695383 |
-| I am really happy!     |  0.6987571 |
-| I am really not happy! | -0.5968026 |
+| I am really happy!     |  0.7197007 |
+| I am really not happy! | -0.6094200 |
 
 Tardis also handles blocks of text differently from other
 sentiment-analysis algorithms, most of which treat blocks of text as
@@ -86,9 +86,9 @@ tardis::tardis(text) %>%
   knitr::kable()
 ```
 
-| sentences_orig                                                                        |     score |  score_sd | score_range |
-|:--------------------------------------------------------------------------------------|----------:|----------:|------------:|
-| This sentence is neutral. This one is really happy! This one is absolutely miserable. | 0.0613416 | 0.6455055 |    1.290718 |
+| sentences_orig                                                                        |     score | score_sd | score_range |
+|:--------------------------------------------------------------------------------------|----------:|---------:|------------:|
+| This sentence is neutral. This one is really happy! This one is absolutely miserable. | 0.0683228 | 0.655876 |    1.311661 |
 
 Or even passive-aggressive hostility:
 

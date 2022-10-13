@@ -1,6 +1,6 @@
 #' @useDynLib tardis, .registration = TRUE
 
-handle_sentence_scores <- function(result, sigmoid_factor = 15) {
+handle_sentence_scores <- function(result, sigmoid_factor = 15, punctuation_factor = 1.15) {
   # dplyr data masking
   punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- . <- NULL
 
@@ -8,20 +8,26 @@ handle_sentence_scores <- function(result, sigmoid_factor = 15) {
   # data.table was faster but won't work inside of the package with a clean
   # R CMD CHECK no matter what I try
   # https://stackoverflow.com/questions/50768717/failure-using-data-table-inside-package-function
+  # Best option might be a custom cpp11 function to replace dplyr::summarise(),
+  # but this seems like a lot of work for unclear reward.
 
+  # get punctuation effect. one question mark has no effect. any exclamation point
+  # does. get # of effective punctuation marks, scale up by punctuation factor.
+  # we count punctuation using a cpp11 function for speed
+
+  result$punct_count <- count_punct_cpp11(em = as.integer(result$punct_exclamation),
+                                          qm = as.integer(result$punct_question))
+
+  result$sentence_punct <- punctuation_factor ^ result$punct_count
+
+  # because of a dplyr::summarise() quirk, we multiply each word by sentence_punct
+  # inside the function call. if we do it outside (more aesthetically natural)
+  # it does not reduce the number of rows, and returns one row per word
   step1 <- result %>%
     dplyr::group_by(text_id, sentence_id) %>%
-    dplyr::summarise(sentence_sum = sum(sentiment_word, na.rm = TRUE),
-                     sentence_punct = min(punct_exclamation, 4) * 0.292 + min(punct_question * 0.18, 0.96)
-                     #,sentence_swing = max(sentiment_word) - min(sentiment_word)
+    dplyr::summarise(sentence_score = sum(sentiment_word * sentence_punct, na.rm = TRUE)
                      , .groups = "drop_last"
     )
-
-
-  # vectorized add punctuation in the signed direction, only if not zero. (otherwise subtracted when it shouldn't)
-  # much faster to use primitive sign() function than comparing abs() values
-  # about twice as fast without dplyr here
-  step1$sentence_score <- step1$sentence_sum + sign(step1$sentence_sum) * step1$sentence_punct
 
   if (!is.na(sigmoid_factor)){
     step1$sentence_score <- step1$sentence_score / sqrt((step1$sentence_score^2) + sigmoid_factor)

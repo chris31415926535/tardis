@@ -57,3 +57,22 @@ cpp11::doubles get_nonzero_value_cpp11(cpp11::doubles x, cpp11::doubles y) {
 
   return out;
 }
+
+[[cpp11::register]]
+cpp11::integers count_punct_cpp11(cpp11::integers em, cpp11::integers qm){
+  int n = em.size();
+
+  writable::integers out(n);
+
+  for (int i = 0; i < n; i++){
+    if (qm[i] == 1 && em[i] == 0) {
+      out[i] = 0;
+    } else {
+      if (qm[i] + em[i] < 3) out[i] = qm[i] + em[i];
+      if (qm[i] + em[i] >= 3) out[i] = 3;
+    }
+
+  }
+
+  return out;
+}

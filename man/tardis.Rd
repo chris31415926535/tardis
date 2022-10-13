@@ -14,6 +14,7 @@ tardis(
   sigmoid_factor = 15,
   negation_factor = 0.75,
   allcaps_factor = 1.25,
+  punctuation_factor = 1.15,
   use_punctuation = TRUE,
   summary_function = c("mean", "median", "max", "min", "sum"),
   simple_count = FALSE,
@@ -46,6 +47,12 @@ Should probably be less than 1.}
 \item{allcaps_factor}{Numeric, default 1.25. Multiplier for scaling effects of
 of sentiment-bearing terms in ALL CAPS. Should probably
 be more than 1, to increase effects.}
+
+\item{punctuation_factor}{Numeric, default 1.15. Multiplier for scaling effects of
+punctuation. A single question mark has no effect, but
+one or more exclamation marks does, and question marks
+have effects in the presence of exclamation marks, up
+to three punctuation marks total.}
 
 \item{use_punctuation}{Boolean, default TRUE. Should we consider sentence-level punctuation?}
 
