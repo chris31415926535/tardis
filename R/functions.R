@@ -123,7 +123,7 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
       dplyr::mutate(emojis = stringr::str_extract_all(sentences_orig, emoji_regex))
 
     step2 <- step1 %>%
-      dplyr::mutate(sentences_noemojis = stringr::str_remove_all(sentences_orig, emoji_regex))
+      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences_orig, emoji_regex, "."))
 
   } else {
     step2 <- sentences %>%
