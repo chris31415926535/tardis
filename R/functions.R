@@ -2,7 +2,7 @@
 
 handle_sentence_scores <- function(result, sigmoid_factor = 15, punctuation_factor = 1.15) {
   # dplyr data masking
-  punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences_orig <- sentiment_word <- text_id <- . <- NULL
+  punct_exclamation <- punct_question <- sentence <- sentence_id <- sentence_punct <- sentence_score <- sentence_sum <- sentences <- sentiment_word <- text_id <- . <- NULL
 
   #step1 now takes roughly 90% of the time in this function. can it be sped up?
   # data.table was faster but won't work inside of the package with a clean
@@ -100,7 +100,7 @@ handle_modifiers <- function(result, dict_modifiers_vec, use_modifiers) {
 
 split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dict_sentiments){
   # dplyr data masking
-  sentence <- sentences_orig <- sentences_noemojis <- sentence <- emojis <- NULLsentence <- sentences_orig <- sentences_noemojis <- sentence <- emojis <- NULL
+  sentence <- sentences_noemojis <- sentence <- emojis <- NULL
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
   # 2022-09-25 regex string splitcontinues to be huge bottleneck, even with
@@ -120,14 +120,14 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   # tibble with empty column for emojis
   if (emoji_regex != ""){
     step1 <- sentences %>%
-      dplyr::mutate(emojis = stringr::str_extract_all(sentences_orig, emoji_regex))
+      dplyr::mutate(emojis = stringr::str_extract_all(sentences, emoji_regex))
 
     step2 <- step1 %>%
-      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences_orig, emoji_regex, "."))
+      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences, emoji_regex, "."))
 
   } else {
     step2 <- sentences %>%
-      dplyr::mutate(sentences_noemojis = sentences_orig, emojis = list(rep(character(length = 0L), times = nrow(sentences))))
+      dplyr::mutate(sentences_noemojis = sentences, emojis = list(rep(character(length = 0L), times = nrow(sentences))))
   }
 
   step3cpp11 <- step2 %>%
@@ -135,14 +135,14 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
     dplyr::mutate(sentence = purrr::map(sentences_noemojis, split_string_after_punctuation_cpp11)) #split_string_after_punctuation))
 
   step4 <- step3cpp11 %>%
-    dplyr::mutate(sentences = purrr::map2(sentence, emojis, function(x,y) {
+    dplyr::mutate(sentences_temp = purrr::map2(sentence, emojis, function(x,y) {
       c(x, y)
     }))
 
   result <- step4 %>%
     dplyr::select(-emojis, -sentences_noemojis, -sentence) %>%
-    tidyr::unnest(sentences) %>%
-    dplyr::rename(sentence = sentences)
+    tidyr::unnest(sentences_temp) %>%
+    dplyr::rename(sentence = sentences_temp)
 
   # assign unique sentence ids
   result$sentence_id <- 1:nrow(result)

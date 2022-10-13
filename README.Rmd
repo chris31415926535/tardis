@@ -68,7 +68,7 @@ text <- c("I am happy.",
           "I am really not happy!")
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, score) %>%
+  dplyr::select(sentences, score) %>%
   knitr::kable()
 ```
 
@@ -78,7 +78,7 @@ Tardis also handles blocks of text differently from other sentiment-analysis alg
 text <- "This sentence is neutral. This one is really happy! This one is absolutely miserable."
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
+  dplyr::select(sentences, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
@@ -88,7 +88,7 @@ Or even passive-aggressive hostility:
 text <- "Die in a fire 😘" 
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
+  dplyr::select(sentences, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 

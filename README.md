@@ -59,11 +59,11 @@ text <- c("I am happy.",
           "I am really not happy!")
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, score) %>%
+  dplyr::select(sentences, score) %>%
   knitr::kable()
 ```
 
-| sentences_orig         |      score |
+| sentences              |      score |
 |:-----------------------|-----------:|
 | I am happy.            |  0.5718850 |
 | I am really happy.     |  0.6695383 |
@@ -82,11 +82,11 @@ may be close to neutral overall.
 text <- "This sentence is neutral. This one is really happy! This one is absolutely miserable."
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
+  dplyr::select(sentences, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
-| sentences_orig                                                                        |     score | score_sd | score_range |
+| sentences                                                                             |     score | score_sd | score_range |
 |:--------------------------------------------------------------------------------------|----------:|---------:|------------:|
 | This sentence is neutral. This one is really happy! This one is absolutely miserable. | 0.0683228 | 0.655876 |    1.311661 |
 
@@ -96,11 +96,11 @@ Or even passive-aggressive hostility:
 text <- "Die in a fire 😘" 
 
 tardis::tardis(text) %>%
-  dplyr::select(sentences_orig, score, score_sd, score_range) %>%
+  dplyr::select(sentences, score, score_sd, score_range) %>%
   knitr::kable()
 ```
 
-| sentences_orig  |      score |  score_sd | score_range |
+| sentences       |      score |  score_sd | score_range |
 |:----------------|-----------:|----------:|------------:|
 | Die in a fire 😘 | -0.0664554 | 0.9568319 |    1.353165 |
 

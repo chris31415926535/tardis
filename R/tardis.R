@@ -78,7 +78,7 @@ tardis <- function(
   verbose = FALSE
 ) {
   # for dplyr data masking
-  sentences_orig <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
+  sentences <- sentence <- word <- negation1 <- negation2 <- negation3 <- modifier1 <- modifier2 <- modifier3 <- text_id <- sentence_id <- sentiment_word <- punct_exclamation <- punct_question <- sentence_sum <- sentence_punct <- sentence_score <- NULL
 
   summary_function <- match.arg(summary_function, summary_function)
 
@@ -116,7 +116,7 @@ tardis <- function(
     if (verbose) message ("vector input")
     text_column <- "text"
     original_input <- stringr::str_trim(input_text)
-    sentences <- dplyr::tibble(sentences_orig = original_input)
+    sentences <- dplyr::tibble(sentences = original_input)
     final_output <- sentences
   }
 
@@ -126,7 +126,7 @@ tardis <- function(
     if (verbose) message ("data frame input")
     original_input <- unlist(input_text[text_column])
     sentences <- dplyr::rename(input_text,
-                               sentences_orig = dplyr::all_of(text_column))
+                               sentences = dplyr::all_of(text_column))
     final_output <- input_text
   }
 
@@ -152,7 +152,7 @@ tardis <- function(
       new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
 
       dict_sentiments$token[[multi_word_indices[[i]]]] <- new_word
-      sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
+      sentences$sentences <- gsub(x = sentences$sentences, pattern = old_word, replacement = new_word, fixed = TRUE)
 
     }
 
@@ -187,7 +187,7 @@ tardis <- function(
         new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
 
         dict_modifiers$token[[multi_word_indices_mod[[i]]]] <- new_word
-        sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
+        sentences$sentences <- gsub(x = sentences$sentences, pattern = old_word, replacement = new_word, fixed = TRUE)
 
       }
 
@@ -223,7 +223,7 @@ tardis <- function(
         new_word <- gsub(x = old_word, pattern = " ", replacement = "x", fixed = TRUE)
 
         dict_negations$token[[multi_word_indices_neg[[i]]]] <- new_word
-        sentences$sentences_orig <- gsub(x = sentences$sentences_orig, pattern = old_word, replacement = new_word, fixed = TRUE)
+        sentences$sentences <- gsub(x = sentences$sentences, pattern = old_word, replacement = new_word, fixed = TRUE)
 
       }
 
@@ -395,8 +395,8 @@ tardis_multidict <- function(input_text, text_column = NA, dictionaries, ...) {
 
   # VECTOR INPUT: set up
   if (is.vector(input_text)){
-    text_column <- "sentences_orig"
-    input_text <- dplyr::tibble(sentences_orig = stringr::str_trim(input_text))
+    text_column <- "sentences"
+    input_text <- dplyr::tibble(sentences = stringr::str_trim(input_text))
   }
 
 
