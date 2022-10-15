@@ -100,7 +100,7 @@ handle_modifiers <- function(result, dict_modifiers_vec, use_modifiers) {
 
 split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dict_sentiments){
   # dplyr data masking
-  sentence <- sentences_noemojis <- sentence <- emojis <- NULL
+  sentence <- sentences_noemojis <- sentence <- emojis <- sentences_asciiemojis <- sentences_temp <- NULL
   #look behind for punctuation, look ahead for emojis
   # but only look for emojis that are present in the dictionary! huge time saver
   # 2022-09-25 regex string splitcontinues to be huge bottleneck, even with
@@ -117,8 +117,9 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   #  c(":)", ":(", ":}") %>%
     stringr::str_subset(":|;|=") %>%
     stringr::str_replace_all("(\\W)", "\\\\\\1") %>% # https://stackoverflow.com/questions/14836754/is-there-an-r-function-to-escape-a-string-for-regex-characters
-    paste0(collapse = "|") %>%
-    paste0("(",.,")")
+    paste0(collapse = "|")
+
+  ascii_emoji_regex <- paste0("(",ascii_emoji_regex,")")
 
   if (ascii_emoji_regex == "()") ascii_emoji_regex <- character(0)
 
