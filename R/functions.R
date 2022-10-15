@@ -113,16 +113,16 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
 
   emojis_in_dictionary <- dict_sentiments$token %>% stringr::str_subset(emoji_regex_internal)
 
-  dict_ascii_emojis <- dict_sentiments$token %>%
+  ascii_emoji_regex <- dict_sentiments$token %>%
   #  c(":)", ":(", ":}") %>%
     stringr::str_subset(":|;|=") %>%
     stringr::str_replace_all("(\\W)", "\\\\\\1") %>% # https://stackoverflow.com/questions/14836754/is-there-an-r-function-to-escape-a-string-for-regex-characters
     paste0(collapse = "|") %>%
     paste0("(",.,")")
 
-  if (dict_ascii_emojis == "()") dict_ascii_emojis <- character(0)
+  if (ascii_emoji_regex == "()") ascii_emoji_regex <- character(0)
 
-  emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
+  utf8_emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
 
   regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"
 
@@ -132,9 +132,9 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
 
   # preprocessing for ascii emojis, replacing them with ". :) ." to break sentences
   # this is much more natural with UTF-8 emojis! this is also a performance bottleneck.
-  if (length(dict_ascii_emojis) > 0) {
+  if (length(ascii_emoji_regex) > 0) {
     step0 <- sentences %>%
-      dplyr::mutate(sentences_asciiemojis = gsub(x = sentences, pattern = dict_ascii_emojis, replacement = ". \\1 ."))
+      dplyr::mutate(sentences_asciiemojis = gsub(x = sentences, pattern = ascii_emoji_regex, replacement = ". \\1 ."))
   } else {
     step0 <- sentences
     step0$sentences_asciiemojis <- step0$sentences
@@ -142,12 +142,12 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
 
   # only extract emojis if there are any in the dictionary. otherwise create a
   # tibble with empty column for emojis
-  if (emoji_regex != ""){
+  if (utf8_emoji_regex != ""){
     step1 <- step0 %>%
-      dplyr::mutate(emojis = stringr::str_extract_all(sentences_asciiemojis, emoji_regex))
+      dplyr::mutate(emojis = stringr::str_extract_all(sentences_asciiemojis, utf8_emoji_regex))
 
     step2 <- step1 %>%
-      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences_asciiemojis, emoji_regex, "."))
+      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences_asciiemojis, utf8_emoji_regex, "."))
 
   } else {
     step2 <- step0 %>%
