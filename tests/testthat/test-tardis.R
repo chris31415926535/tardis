@@ -38,7 +38,7 @@ testthat::test_that("Punctuation and capitalization together amplifies sentiment
 
 testthat::test_that("Cpp11 function to split sentences works properly", {
   temp_dict_sentiments <- dplyr::tibble(token = "happy")
-  temp_dict_emojis <- ""
+  temp_dict_emojis <- emoji_regex_internal#""
   test1 <- dplyr::tibble(sentences = "hi! you!")
   test2 <- dplyr::tibble(sentences = "HI!!!! you??!!! wow")
   test3 <- dplyr::tibble(sentences = "hi.. there...?? you!!!!!")

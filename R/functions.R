@@ -107,27 +107,51 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   # extracting emojis separately and only splitting on "(?<=(\\.|!|\\?){1,5}\\s)"
   # 2022-09-26 this version does stringsplit using Rcpp to split after string of !,?,.
   #            which is ~25x faster than the regex
+  # 2022-10-15 Adding ASCII emojis to the regex is very expensive and slow. My
+  #            short-term solution is to have fewer emojis in the regex! Longer-
+  #            term, could adjust the implementation to maybe use indexing...
+
   emojis_in_dictionary <- dict_sentiments$token %>% stringr::str_subset(emoji_regex_internal)
 
+  dict_ascii_emojis <- dict_sentiments$token %>%
+  #  c(":)", ":(", ":}") %>%
+    stringr::str_subset(":|;|=") %>%
+    stringr::str_replace_all("(\\W)", "\\\\\\1") %>% # https://stackoverflow.com/questions/14836754/is-there-an-r-function-to-escape-a-string-for-regex-characters
+    paste0(collapse = "|") %>%
+    paste0("(",.,")")
+
+  if (dict_ascii_emojis == "()") dict_ascii_emojis <- character(0)
+
   emoji_regex <- paste0(emojis_in_dictionary, collapse = "|")
+
   regex_pattern <- "(?<=(\\.|!|\\?){1,5}\\s)"
 
   # need an id for each text, then one for each sentence.
   # unnesting is the big time suck
   sentences$text_id <- 1:nrow(sentences)
 
+  # preprocessing for ascii emojis, replacing them with ". :) ." to break sentences
+  # this is much more natural with UTF-8 emojis! this is also a performance bottleneck.
+  if (length(dict_ascii_emojis) > 0) {
+    step0 <- sentences %>%
+      dplyr::mutate(sentences_asciiemojis = gsub(x = sentences, pattern = dict_ascii_emojis, replacement = ". \\1 ."))
+  } else {
+    step0 <- sentences
+    step0$sentences_asciiemojis <- step0$sentences
+  }
+
   # only extract emojis if there are any in the dictionary. otherwise create a
   # tibble with empty column for emojis
   if (emoji_regex != ""){
-    step1 <- sentences %>%
-      dplyr::mutate(emojis = stringr::str_extract_all(sentences, emoji_regex))
+    step1 <- step0 %>%
+      dplyr::mutate(emojis = stringr::str_extract_all(sentences_asciiemojis, emoji_regex))
 
     step2 <- step1 %>%
-      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences, emoji_regex, "."))
+      dplyr::mutate(sentences_noemojis = stringr::str_replace_all(sentences_asciiemojis, emoji_regex, "."))
 
   } else {
-    step2 <- sentences %>%
-      dplyr::mutate(sentences_noemojis = sentences, emojis = list(rep(character(length = 0L), times = nrow(sentences))))
+    step2 <- step0 %>%
+      dplyr::mutate(sentences_noemojis = sentences_asciiemojis, emojis = list(rep(character(length = 0L), times = nrow(sentences))))
   }
 
   step3cpp11 <- step2 %>%
@@ -142,7 +166,8 @@ split_text_into_sentences_cpp11 <- function(sentences, emoji_regex_internal, dic
   result <- step4 %>%
     dplyr::select(-emojis, -sentences_noemojis, -sentence) %>%
     tidyr::unnest(sentences_temp) %>%
-    dplyr::rename(sentence = sentences_temp)
+    dplyr::rename(sentence = sentences_temp) %>%
+    dplyr::filter(sentence != ".") # remove any singletons from emojis
 
   # assign unique sentence ids
   result$sentence_id <- 1:nrow(result)

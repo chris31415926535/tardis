@@ -6,6 +6,8 @@ dict_vader <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
   dplyr::rename(token = word, score = sentiment) %>%
   readr::write_csv("data-raw/dict_vader.csv")
 
+dict_vader <- readr::read_csv("data-raw/dict_vader_mod.csv")
+
 usethis::use_data(dict_vader, overwrite = TRUE)
 
 # Tidytext dictionary
@@ -19,7 +21,7 @@ dict_liu <- tidytext::sentiments %>%
 usethis::use_data(dict_liu, overwrite = TRUE)
 
 
-## EMOJI DICT
+## UTF8 EMOJI DICT
 # from a published paper that looked at emoji usage and sentiment
 # NB they recorded the sentiment of the tweets the emojis occurred in, then used
 # the distribution of tweet sentiments to create an emoji sentiment:
