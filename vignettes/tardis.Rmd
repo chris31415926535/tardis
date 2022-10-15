@@ -1,0 +1,179 @@
+---
+title: "Introduction to tardis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to tardis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(dplyr, warn.conflicts = FALSE)
+library(tardis)
+```
+
+
+
+## The value proposition
+
+Most sentiment-analysis algorithms boil down to two things:
+
+* **A dictionary** that tells you what words mean; and,
+* **A set of rules** that tells you how to use the dictionary.
+
+By prioritizing flexibility, transparency, and speed, **tardis makes it fast and easy to analyze text with customisable dictionaries and rules.**
+
+This means you can use the right dictionary and rules for your context and study aims.
+
+## The problem
+
+A sentiment-analysis algorithm is only as good as its dictionary and its rules. 
+
+But relying on any single dictionary can cause problems:
+
+* Dictionaries can encode biases that lead to harm against communities.
+* Dictionaries may be be built for analyzing one corpus (e.g. news articles) or community (e.g. American college students, Amazon Mechanical Turk contract workers) that makes them inappropriate for other corpi (e.g. Twitter posts) or communities (e.g. Etsy shoppers).
+* Furthermore, even within a community dictionaries may not reflect current language use, especially online. (e.g. does "sick" still actually mean "good," or has this fallen out of fashion?)
+
+And similarly, standard approaches may have problems with their rules:
+
+* The rules may be "black-boxed," or not easily accessible or explainable to end-users. But then why should anyone trust them?
+* The rules may be too simple and introduce errors (e.g. simply noting the presence of positive words without considering negations).
+* The rules may be so rigid as to limit the approach's application in new contexts.
+* The rules may treat entire texts as "blobs" of language, without considering the importance of sentence structure or within-text variations in sentiment.
+
+## The proposal
+
+Tardis aims to overcome these issues by following three principles:
+
+* Users should be able to easily apply their own dictionaries.
+* The rules should be clear and easy to explain and understand.
+* The rules should be flexible, giving users fine-grained control over parameters.
+
+And given the importance of online communication and large datasets, Tardis also meets the following requirements:
+
+* The rules are applied at the level of sentences, and aggregated up to input texts. 
+* Both Unicode and ASCII emojis are supported.
+* Multi-word tokens (e.g. "right on") are supported.
+* The algorithm is fast, handling over 10,000 sentences per second on a consumer laptop.
+
+## The algorithm in brief
+
+Tardis first decomposes texts into tokens (words, emojis, or multi-word strings), which are scored based on any dictionary value, if they're in ALL CAPS, and the three preceding tokens. Preceding negations like "not" will reverse and reduce a token's score, and modifiers will either increase (e.g. "very") or decrease (e.g. "slightly") its score. Sentence scores are found by summing token scores, adjusting for punctuation, and mapping reults to the range $(-1, 1)$ with a sigmoid function. Text scores are means of sentence scores. Each of these steps can be tweaked or disabled by user-supplied parameters. Tardis's algorithm is inspired by other approaches, notably VADER, although it differs from this latter in three key respects: first, it is much more customizable; second, token score adjustments are all multiplicative, making the order of operations unimportant; and third, there are no special cases or exceptions, making the rules simpler and more intuitive.
+
+Because R is a vectorized language, interally tardis creates several vectors of length $n$ and stores them in a `tbl_df` data frame, where $n$ is the number of tokens in the input texts, and then operates largely by adding and multiplying across these vectors. For example, if $neg$ is the negation scaling factor,  $s_i$ is the vector of each token's dictionary sentiment, and $n_i$ is the number of negations in the tokens at indices $i-1$, $i-2$, and $i-3$, then we can calculate the effect of negations as $s_i * (-neg)^{n_i}$. The implementation makes heavy use of the package dplyr, although it also uses base R and custom C++ functions to increase performance.
+
+In languages like Python or C++, the preceding algorithm could be efficiently implemented through a "moving window" approach that steps through each token sequentially and computes a score based on a function $f(t_j,t_{j-1},t_{j-2},t_{j-3})$ of each token $t_j$ and its three preceding tokens. 
+
+### The default dictionaries
+
+*To be completed...*
+
+## Some examples
+
+### Fixing false positives: Ed's little bed
+
+A simple children's rhyme shows one pitfall of relying on a fixed dictionary. Here we see the sad story of Ed, whose bed is too small:
+
+```{r}
+library(tardis)
+library(dplyr)
+library(knitr)
+
+text <- c("This is not good.", 
+          "This is not right.", 
+          "My feet stick out of bed all night.", 
+          "And when I pull them in, oh dear!", 
+          "My feet stick out of bed up here!")
+
+tardis::tardis(text) %>%
+  dplyr::select(sentences, score) %>%
+  knitr::kable()
+```
+
+Tardis has correctly noted that "not good" is negative, but has incorrectly classified the fourth sentence as positive because it contains the affectionate term "dear." To fix this, we can add a new row to our default dictionary classifying "oh dear" as a negative term.
+
+```{r}
+custom_dictionary <- dplyr::add_row(tardis::dict_tardis_sentiment,
+                                    token = "oh dear", score = -1)
+
+tardis::tardis(text, dict_sentiments = custom_dictionary) %>%
+  dplyr::select(sentences, score) %>%
+  knitr::kable()
+
+```
+
+Of course, our choice to assign "oh dear" a sentiment value of -1 was arbitrary, but with this change tardis correctly flags the fourth sentence as negative. This demonstrates how easy it is to adapt tardis's dictionaries to a specific context.
+
+### Identifying sarcasm in online communications
+
+Here are three two-sentence texts that have similarly neutral mean sentiments, but very different meanings.
+
+```{r}
+text <- c("I guess so, that might be fine. I don't know.",
+          "Wow, you're really smart. MORON!",
+          "It's the worst idea I've ever heard 😘" )
+
+tardis::tardis(text) %>%
+  knitr::kable()
+```
+
+Only the first sentence is genuinely neutral; the second two express two wildly different sentiments that *on average* are neutral, but to most human readers imply a strong emotional value. Tardis also returns the standard deviation and ranges of within-text sentence sentiments, and we can see that the ranges for the two sarcastic texts are much larger than for the truly neutral text. Of course, these examples are blunt and not particularly funny, but they show the use of looking beyond the mean when studying sentiment in informal online communications.
+
+### Simple counts
+
+In some cases, researchers may have pre-built dictionaries and be interested in simply detecting those words, without worrying about any of the more complex rules described above. For this use case, tardis has a convenience parameter `simple_count` which, when `TRUE`, disables most of the logic and returns simple sums of token values. Tardis also sends the user a warning to confirm this is the expected behaviour.
+
+For example:
+
+```{r warn=FALSE}
+dict_cats <- dplyr::tibble(token = c("cat", "cats"), score = c(1, 1))
+
+text <- c("I love cats.", "Not a cat?!?!", "CATS CATS CATS!!!")
+
+tardis::tardis(text, dict_sentiments = dict_cats, simple_count = TRUE) %>%
+  dplyr::select(sentences, score) %>%
+  knitr::kable()
+```
+
+Note that the column names are unchanged, although the interpretation differs.
+
+
+
+### The algorithm in excruciating detail
+
+* Texts are decomposed into sentences.
+  * By default, we count the number of exclamation and question marks in each sentence for future use.
+  * Emojis are treated as sentences.
+* Sentences are decomposed into tokens, which are usually words but can also be emojis (e.g. ":)") or multi-word strings (e.g. "oh dear").
+* Tokens are then checked against three dictionaries and classified into one of four groups:
+  * **Sentiment-bearing tokens** have positive or negative sentiment values. For example, "happy" might have a value of +1 and "sad" might have a value of -1.
+  * **Modifiers** amplify or damp the value of subsequent sentiment-bearing tokens. For example, "very" might amplify future values and "somewhat" might damp them.
+  * **Negators** reverse the direction and reduce the amplitude of subsequent sentiment-bearing tokens. The intuitive justification is that "not bad" is positive, but not as positive as "bad" is negative.
+  * **Unidentified tokens** that fall into none of the preceding categories have no direct effect.
+  
+Once a text has been broken down into sentences and tokens, scores are built back up starting from the tokens.
+
+* If our sentence is a string of $n$ tokens, then a sentiment-bearing token $t_j$ at index $j$ has a sentiment that is a function of itself and its three preceding tokens.
+  * If $t_j$ is in ALL CAPS, then its sentiment is scaled up by a multiplicative factor.
+  * Modifiers work by scaling a token's score up or down by a user-supplied multiplier. Modifiers are less influential the farther back they are, and scale down to 95% and 90% efficacy at two and three steps back respectively.
+  * Negators reverse a token's sign and decrease its amplitude by a user-supplied multiplier. The intuition is that "not bad" is in the direction of "good," but not quite as good as "bad" is bad.
+
+* Sentence scores are computed from their tokens and punctuation.
+  * Adjusted token scores are summed.
+  * Sentence sums are then adjusted based on exclamation and question marks. A single question mark has no effect, but otherwise we count the number of exclamation marks and punctuation marks up to three, and multiply the sentence sum by the punctuation factor that many times.
+  * Finally, we optionally scale the punctuation-adjusted sentence sums with a sigmoid function to map the values to the range $(-1,1)$.
+
+* Texts
+  * Texts are scored based on their constitutive sentences.
+  * By default, we take the mean of the sentence scores. However, users can also use other summary functions (e.g. median, max, min).
+  * The standard deviation and range of each text's sentence scores is also returned.
+
+*To be completed...*

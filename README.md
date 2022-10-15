@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
+# tardis: Text Analysis with Rules and Dictionaries for Inferring Sentiment (and more!)
 
 <!-- badges: start -->
 

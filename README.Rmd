@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Text Analysis with Rules and Dictionaries for Inferring Sentiment (TARDIS)
+# tardis: Text Analysis with Rules and Dictionaries for Inferring Sentiment (and more!)
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/tardis)](https://CRAN.R-project.org/package=tardis)
