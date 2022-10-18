@@ -165,7 +165,7 @@ tardis <- function(
 
   # if no dictionary supplied by user, use default dictionary
   if (all(is.na(dict_modifiers)) | all(is.null(dict_modifiers))){
-    dict_modifiers <- tardis::dict_vader_modifiers
+    dict_modifiers <- tardis::dict_modifiers
   }
 
   # if user said "none", we're not using modifiers. otherwise set up vector dictionary
@@ -193,7 +193,7 @@ tardis <- function(
 
     }
 
-    dict_modifiers_vec <- dict_modifiers$booster_value
+    dict_modifiers_vec <- dict_modifiers$score
     names(dict_modifiers_vec) <- dict_modifiers$token
   }
 

@@ -14,10 +14,16 @@
 #' @source \url{https://CRAN.R-project.org/package=vader}
 "dict_vader"
 
-#' Modifier dictionary from VADER.
+#' Modifier dictionary.
+#'
+#' A `tbl_df` with two columns: `token` and `score`, identifying the tokens
+#' that increase or decrease other words' sentiments, and the percentage by
+#' which they do so.
+#'
+#' Derived originally from the VADER dictionary, but modified.
 #'
 #' @source \url{https://CRAN.R-project.org/package=vader}
-"dict_vader_modifiers"
+"dict_modifiers"
 
 #' Negation dictionary from VADER.
 #'

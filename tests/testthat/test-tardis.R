@@ -124,7 +124,7 @@ testthat::test_that("Modifiers work as expected", {
   testthat::expect_equal(tardis("very very very very happy")$score, tardis("very very very happy")$score)
 
   # multi-word modifiers work okay
-  custom_modifiers <- dplyr::tibble(token = c("very", "gosh darn"), booster_value = 0.293, booster_sign=1)
+  custom_modifiers <- dplyr::tibble(token = c("very", "gosh darn"), score = 0.25)
   testthat::expect_gt(tardis("very happy", dict_modifiers = custom_modifiers)$score, tardis("happy", dict_modifiers = custom_modifiers)$score)
   testthat::expect_gt(tardis("gosh darn happy", dict_modifiers = custom_modifiers)$score, tardis("happy", dict_modifiers = custom_modifiers)$score)
   testthat::expect_lt(tardis("gosh darn sad", dict_modifiers = custom_modifiers)$score, tardis("sad", dict_modifiers = custom_modifiers)$score)

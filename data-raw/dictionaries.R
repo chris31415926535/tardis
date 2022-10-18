@@ -75,9 +75,12 @@ usethis::use_data(dict_tardis_sentiment, overwrite = TRUE)
 ###### MODIFIERS
 
 dict_vader_modifiers <- tidyvader::get_vader_dictionaries()$dictionary[[4]] %>%
-  dplyr::rename(token = word)
+  dplyr::rename(token = word) %>%
+  readr::write_csv("data-raw/dict_vader_modifiers.csv")
 
-usethis::use_data(dict_vader_modifiers, overwrite = TRUE)
+dict_modifiers <- readr::read_csv("data-raw/dict_modifiers.csv")
+
+usethis::use_data(dict_modifiers, overwrite = TRUE)
 
 
 ### NEGATIONS

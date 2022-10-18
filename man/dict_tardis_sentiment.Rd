@@ -6,7 +6,7 @@
 \alias{dict_tardis_sentiment}
 \title{Sentiment dictionary for TARDIS package.}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 7806 rows and 2 columns.
+An object of class \code{spec_tbl_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 7653 rows and 2 columns.
 }
 \usage{
 dict_tardis_sentiment
