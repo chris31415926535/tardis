@@ -131,6 +131,12 @@ tardis <- function(
   }
 
 
+  #################### -
+  # REMOVE APOSTROPHES FROM INPUT TEXT
+
+  sentences$sentences <- gsub(x = sentences$sentences, pattern = "'", replacement = "", fixed = TRUE)
+  sentences$sentences <- gsub(x = sentences$sentences, pattern = "\u2019", replacement = "", fixed = TRUE)
+
   ########################################.
   # DICTIONARY SETUP ----
 
@@ -140,7 +146,10 @@ tardis <- function(
     dict_sentiments <- tardis::dict_tardis_sentiment
   }
 
+  # remove any extra whitespace and apostrophes
   dict_sentiments$token <- stringr::str_squish(dict_sentiments$token)
+  dict_sentiments$token <- gsub(x = dict_sentiments$token, pattern = "'", replacement = "", fixed = TRUE)
+  dict_sentiments$token <- gsub(x = dict_sentiments$token, pattern = "\u2019", replacement = "", fixed = TRUE)
 
   # IF MULTI-WORD NGRAMS IN SENTIMENT DICTIONARY
   # if there are any multi-word ngrams (e.g. "supreme court")
@@ -175,6 +184,12 @@ tardis <- function(
   } else {
     use_modifiers <- TRUE
 
+    # remove extra whitespace and apostrophes
+    dict_modifiers$token <- stringr::str_squish(dict_modifiers$token)
+    dict_modifiers$token <- gsub(x = dict_modifiers$token, pattern = "'", replacement = "", fixed = TRUE)
+    dict_modifiers$token <- gsub(x = dict_modifiers$token, pattern = "\u2019", replacement = "", fixed = TRUE)
+
+
     # IF MULTI-WORD NGRAMS IN MODIFIERS DICTIONARY
     # if there are any multi-word ngrams (e.g. "gosh darn", "bad ass")
     multi_word_indices_mod <- grep(pattern = " ", x = dict_modifiers$token, fixed = TRUE)
@@ -201,7 +216,7 @@ tardis <- function(
 
   # if no dictionary supplied by user, use default dictionary
   if (all(is.na(dict_negations)) | all(is.null(dict_negations))){
-    dict_negations <- tardis::dict_vader_negations
+    dict_negations <- tardis::dict_negations
   }
 
   # if user said "none", we're not using negators. otherwise set up vector dictionary
@@ -210,6 +225,12 @@ tardis <- function(
     use_negations <- FALSE
   } else {
     use_negations <- TRUE
+
+    # remove extra whitespace and apostrophes
+    dict_negations$token <- stringr::str_squish(dict_negations$token)
+    dict_negations$token <- gsub(x = dict_negations$token, pattern = "'", replacement = "", fixed = TRUE)
+    dict_negations$token <- gsub(x = dict_negations$token, pattern = "\u2019", replacement = "", fixed = TRUE)
+
 
     # IF MULTI-WORD NGRAMS IN NEGATIONS DICTIONARY
     # if there are any multi-word ngrams (e.g. "ain't no")
@@ -232,6 +253,7 @@ tardis <- function(
     dict_negations_vec <- rep(1, nrow(dict_negations))
     names(dict_negations_vec) <- dict_negations$token
   }
+
 
   #################### -
   # SPLIT TEXT INTO SENTENCES ----

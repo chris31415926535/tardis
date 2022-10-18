@@ -2,23 +2,23 @@
 library(magrittr)
 
 # VADER dict
-dict_vader <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
-  dplyr::rename(token = word, score = sentiment) %>%
-  readr::write_csv("data-raw/dict_vader.csv")
-
-dict_vader <- readr::read_csv("data-raw/dict_vader_mod.csv")
-
-usethis::use_data(dict_vader, overwrite = TRUE)
+# dict_vader <- tidyvader::get_vader_dictionaries()$dictionary[[1]] %>%
+#   dplyr::rename(token = word, score = sentiment) %>%
+#   readr::write_csv("data-raw/dict_vader.csv")
+#
+# dict_vader <- readr::read_csv("data-raw/dict_vader_mod.csv")
+#
+# usethis::use_data(dict_vader, overwrite = TRUE)
 
 # Tidytext dictionary
 # +1 for positive, -1 for negative
 #Minqing Hu and Bing Liu, “Mining and summarizing customer reviews.”, Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.
-dict_liu <- tidytext::sentiments %>%
-  dplyr::mutate(score = dplyr::if_else(sentiment == "positive", 1, -1)) %>%
-  dplyr::rename(token = word) %>%
-  readr::write_csv("data-raw/dict_liu.csv")
-
-usethis::use_data(dict_liu, overwrite = TRUE)
+# dict_liu <- tidytext::sentiments %>%
+#   dplyr::mutate(score = dplyr::if_else(sentiment == "positive", 1, -1)) %>%
+#   dplyr::rename(token = word) %>%
+#   readr::write_csv("data-raw/dict_liu.csv")
+#
+# usethis::use_data(dict_liu, overwrite = TRUE)
 
 
 ## UTF8 EMOJI DICT
@@ -42,7 +42,7 @@ dict_emoji <- dict_emoji_raw %>%
   dplyr::select(token = Emoji, score) %>%
   readr::write_csv("data-raw/dict_emoji.csv")
 
-usethis::use_data(dict_emoji, overwrite = TRUE)
+#usethis::use_data(dict_emoji, overwrite = TRUE)
 
 # and an emoji regex from the package emo
 emoji_regex_internal <- emo::ji_rx
@@ -69,6 +69,8 @@ dict_tardis_sentiment <- dplyr::bind_rows(dict_vader, dict_emoji_temp) %>%
 
 readr::write_csv(dict_tardis_sentiment, "data-raw/dict_tardis.csv")
 
+dict_tardis_sentiment <- readr::read_csv("data-raw/dict_tardis_sentiment.csv")
+
 usethis::use_data(dict_tardis_sentiment, overwrite = TRUE)
 
 
@@ -85,6 +87,9 @@ usethis::use_data(dict_modifiers, overwrite = TRUE)
 
 ### NEGATIONS
 
-dict_vader_negations <- dplyr::tibble(token = tidyvader::get_vader_dictionaries()$dictionary[[3]])
+dict_vader_negations <- dplyr::tibble(token = tidyvader::get_vader_dictionaries()$dictionary[[3]]) %>%
+  readr::write_csv("data-raw/dict_vader_negations.csv")
 
-usethis::use_data(dict_vader_negations, overwrite = TRUE)
+dict_negations <- readr::read_csv("data-raw/dict_negations.csv")
+
+usethis::use_data(dict_negations, overwrite = TRUE)

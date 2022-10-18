@@ -43,11 +43,11 @@ testthat::test_that("Cpp11 function to split sentences works properly", {
   test2 <- dplyr::tibble(sentences = "HI!!!! you??!!! wow")
   test3 <- dplyr::tibble(sentences = "hi.. there...?? you!!!!!")
   testthat::expect_equal(split_text_into_sentences_cpp11(test1 , temp_dict_emojis, temp_dict_sentiments )$sentence,
-                         c("hi!", " you!"))
+                         c("hi!", "you!"))
   testthat::expect_equal(split_text_into_sentences_cpp11(test2 , temp_dict_emojis, temp_dict_sentiments )$sentence,
-                         c("HI!!!!", " you??!!!"," wow"))
+                         c("HI!!!!", "you??!!!","wow"))
   testthat::expect_equal(split_text_into_sentences_cpp11(test3 , temp_dict_emojis, temp_dict_sentiments )$sentence,
-                         c("hi..", " there...??", " you!!!!!"))
+                         c("hi..", "there...??", "you!!!!!"))
 })
 
 
@@ -153,7 +153,9 @@ testthat::test_that("Negations work as expected",{
   testthat::expect_equal(tardis("not not not not happy")$score, tardis("not not not happy")$score)
 
   # multi-word negations work okay
-  custom_negations <- dplyr::tibble(token = c("not", "ain't no"))
+  custom_negations <- dplyr::tibble(token = c("not", "ain't no", "isn’t"))
+  testthat::expect_equal(tardis("not good", dict_negations = custom_negations)$score, tardis("isn’t good", dict_negations = custom_negations)$score)
+  testthat::expect_equal(tardis("not good", dict_negations = custom_negations)$score, tardis("aint no good", dict_negations = custom_negations)$score)
   testthat::expect_equal(tardis("not good", dict_negations = custom_negations)$score, tardis("ain't no good", dict_negations = custom_negations)$score)
   testthat::expect_lt(tardis("ain't no good", dict_negations = custom_negations)$score, tardis("good", dict_negations = custom_negations)$score)
   testthat::expect_gt(tardis("ain't no bad", dict_negations = custom_negations)$score, tardis("bad", dict_negations = custom_negations)$score)
