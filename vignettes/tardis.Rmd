@@ -176,4 +176,3 @@ Once a text has been broken down into sentences and tokens, scores are built bac
   * By default, we take the mean of the sentence scores. However, users can also use other summary functions (e.g. median, max, min).
   * The standard deviation and range of each text's sentence scores is also returned.
 
-*To be completed...*
