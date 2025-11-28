@@ -1,3 +1,7 @@
+# tardis 0.1.5
+
+* Update DESCRIPTION to remove C++11 to meet CRAN requirements.
+
 # tardis 0.1.4
 
 * Change output column names from "sentiment" to "score" for generalizability.

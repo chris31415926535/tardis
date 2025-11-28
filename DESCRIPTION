@@ -1,7 +1,7 @@
 Package: tardis
 Type: Package
 Title: Text Analysis with Rules and Dictionaries for Inferring Sentiment
-Version: 0.1.4
+Version: 0.1.5
 Authors@R: person(given = "Christopher", 
     family = "Belanger", 
     email = "christopher.a.belanger@gmail.com",
@@ -14,7 +14,7 @@ Description: Measure text's sentiment with dictionaries and simple rules coverin
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Imports: 
     dplyr,
     magrittr,
@@ -35,6 +35,5 @@ Suggests:
 Config/testthat/edition: 3
 LinkingTo: 
     cpp11
-SystemRequirements: C++11
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
